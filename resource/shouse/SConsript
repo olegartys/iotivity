@@ -1,0 +1,15 @@
+Import('env')
+
+shouse_env = env.Clone()
+
+shouse_env.AppendUnique(CPPPATH = [
+        '#/resource/csdk/security/include',
+        '#/resource/include/',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/resource/shouse',
+		'#/resource/shouse/spdlog'
+        ])

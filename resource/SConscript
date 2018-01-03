@@ -39,6 +39,9 @@ SConscript('#extlibs/libcoap/SConscript')
 # Build csdk
 SConscript('csdk/SConscript')
 
+# Build shouse
+SConscript('shouse/SConscript')
+
 if target_os not in ['arduino', 'darwin', 'ios']:
     # Build liboc_logger
     SConscript('oc_logger/SConscript')

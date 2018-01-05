@@ -12,7 +12,6 @@ public:
 
     virtual const std::string& uri() const { return mUri; }
     virtual const OC::OCRepresentation& repr() const { return mResourceRepr; }
-    virtual OC::OCRepresentation& repr() { return mResourceRepr; }
 
 protected:
     BaseResource() = default;
@@ -42,13 +41,13 @@ protected:
 
 };
 
-class BaseResourceServer : public BaseResource, public BaseResourceTypeInterface {
+class BaseResourceServer : public BaseResource {
 public:
     virtual const OCResourceHandle& hndl() const { return mResourceHandle; }
 
 protected:
-    BaseResourceServer(const std::string& uri, const std::string& type, const std::string& iface) :
-        BaseResource(uri), BaseResourceTypeInterface(type, iface) {}
+    BaseResourceServer(const std::string& uri) :
+        BaseResource(uri) {}
 
     virtual OCEntityHandlerResult entityHandler(std::shared_ptr<OC::OCResourceRequest> request) = 0;
 
@@ -56,17 +55,9 @@ protected:
 
 };
 
-class BaseResourceClient : public BaseResource, public BaseResourceTypeInterface {
+class BaseResourceClient : public BaseResource {
 public:
-    virtual void setResource(const std::shared_ptr<OC::OCResource>& resource) = 0;
-
-    virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap) = 0;
-
-    virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap) = 0;
-
-protected:
-    BaseResourceClient(const std::string& uri, const std::string& type, const std::string& iface) :
-        BaseResource(uri), BaseResourceTypeInterface(type, iface) {}
+    virtual void onGet(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) = 0;
 
 };
 

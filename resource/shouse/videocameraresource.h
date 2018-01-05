@@ -6,7 +6,7 @@
 #include <opencv2/videoio.hpp>
 
 #include "Log.h"
-#include "baseresource.h"
+#include "baseresource_old.h"
 #include "base64.h"
 
 class VideoCameraTypeInterface : public BaseResourceTypeInterface {

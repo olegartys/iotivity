@@ -72,14 +72,20 @@ if target_os == 'android':
 if target_os in ['msys_nt', 'windows']:
     shouse_env.AppendUnique(LIBS = ['Comctl32', 'Gdi32', 'User32'])
 
-my_smpserver = shouse_env.Program('my_simpleserver', ['my_simpleserver.cpp', 'binarylightserver.cpp'])
+# Old interface
+shouse_env.Program('my_simpleserver', ['my_simpleserver.cpp', 'binarylightserver.cpp'])
 
-my_smpclient = shouse_env.Program('my_simpleclient', ['my_simpleclient.cpp', 'binarylightclient.cpp'])
+shouse_env.Program('my_simpleclient', ['my_simpleclient.cpp', 'binarylightclient.cpp'])
+
+shouse_env.Program('videocameraserver', ['videocameraserverprocess.cpp', 'videocameraserver.cpp'])
+
+shouse_env.Program('videocameraclient', ['videocameraclientprocess.cpp', 'videocameraclient.cpp'])
+
+# HAL-based interface
+shouse_env.Program('HAL_test_server', ['shouse_res_srv.cpp', 'test_server.cpp'])
+shouse_env.Program('HAL_test_client', ['shouse_res_client.cpp', 'test_client.cpp'])
 
 shouse_env.Program('raml_test', ['raml_test.cpp'])
 
-shouse_env.Program('videocameraserver', ['videocameraserverprocess.cpp', 'videocameraserver.cpp'])
-shouse_env.Program('videocameraclient', ['videocameraclientprocess.cpp', 'videocameraclient.cpp'])
-
-Alias("shouse", [my_smpclient, my_smpserver])
+Alias("shouse")
 shouse_env.AppendTarget('shouse')

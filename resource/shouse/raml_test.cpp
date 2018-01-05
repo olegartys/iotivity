@@ -2,8 +2,6 @@
 #include <RamlParser.h>
 #include <memory>
 #include <iostream>
-#include "../../service/simulator/ramlparser/raml/model/Raml.h"
-#include "../include/OCApi.h"
 
 int main() {
     RAML::RamlParser rp("/home/olegartys/src/iotivity/switch.raml");
@@ -26,8 +24,8 @@ int main() {
 
     std::cout << schema->getSchema();
 
-    OC::OCRepresentation repr;
-    repr.set
+    // OC::OCRepresentation repr;
+    // repr.set
 
 //    RAML::Raml r;
 //    r.get

@@ -2,7 +2,7 @@
 #define LIGHTRESOURCE_H
 
 #include "Log.h"
-#include "baseresource.h"
+#include "baseresource_old.h"
 
 namespace PH = std::placeholders;
 

@@ -40,9 +40,11 @@
 #include <windows.h>
 #endif
 
-#include "baseresource_old.h"
-#include "lightresource.h"
-#include "binarylightserver.h"
+#include "baseresource.h"
+#include "shouse_res_hal.h"
+#include "shouse_res_srv.h"
+
+#include "Log.h"
 
 #include "ocpayload.h"
 
@@ -51,25 +53,27 @@ using namespace std;
 namespace PH = std::placeholders;
 
 static const char* SVR_DB_FILE_NAME = "./oic_svr_db_server.dat";
-static const char* LOG_TAG = "my_simpleserver";
+static const char* LOG_TAG = "test_server";
 
 // Set of strings for each of platform Info fields
-std::string  platformId = "my_platform_id";
-std::string  manufacturerName = "my_manufacturerName";
-std::string  manufacturerLink = "https://www.iotivity.org";
-std::string  modelNumber = "myModelNumber";
-std::string  dateOfManufacture = "1488-22-8";
-std::string  platformVersion = "myPlatformVersion";
-std::string  operatingSystemVersion = "myOS";
-std::string  hardwareVersion = "myHardwareVersion";
-std::string  firmwareVersion = "1.0";
-std::string  supportLink = "https://www.iotivity.org";
-std::string  systemTime = "2016-01-15T11.01";
+std::string gPlatformId = "0A3E0D6F-DBF5-404E-8719-D6880042463A";
+std::string gManufacturerName = "OCF";
+std::string gManufacturerLink = "https://www.iotivity.org";
+std::string gModelNumber = "myModelNumber";
+std::string gDateOfManufacture = "2016-01-15";
+std::string gPlatformVersion = "myPlatformVersion";
+std::string gOperatingSystemVersion = "myOS";
+std::string gHardwareVersion = "myHardwareVersion";
+std::string gFirmwareVersion = "1.0";
+std::string gSupportLink = "https://www.iotivity.org";
+std::string gSystemTime = "2016-01-15T11.01";
 
 // Set of strings for each of device info fields
 std::string  deviceName = "IoTivity Simple Server";
-std::string  specVersion = "core.1.1.0";
-std::string  dataModelVersions = "res.1.1.0,sh.1.1.0";
+std::string  deviceType = "oic.wk.tv";
+std::string  specVersion = "ocf.1.1.0";
+std::vector<std::string> dataModelVersions = {"ocf.res.1.1.0", "ocf.sh.1.1.0"};
+std::string  protocolIndependentID = "fa008167-3bbf-4c9d-8604-c9bcb96cb712";
 
 // OCPlatformInfo Contains all the platform info to be stored
 OCPlatformInfo platformInfo;
@@ -109,6 +113,33 @@ OCStackResult SetPlatformInfo(std::string platformID, std::string manufacturerNa
     return OC_STACK_OK;
 }
 
+class LightHAL : public ShouseResHAL {
+public:
+    int onGet(OCRepresentation& curRepr, const QueryParamsMap& params) noexcept override {
+        int ret = 0;
+
+        mState++;
+        Log::info(LOG_TAG, "Get something: {}", curRepr.getValue<int>("state"));
+
+        curRepr.setValue("state", mState);
+
+        return ret;
+    }
+
+    int onPut(OCRepresentation& curRepr, const QueryParamsMap& params) noexcept override {
+        int ret = 0;
+
+        curRepr.getValue("state", mState);
+        Log::info(LOG_TAG, "Put something: {}", mState);
+
+        return ret;        
+    }
+
+private:
+    int mState = 0;
+
+};
+
 int main(int argc, char** argv) {
     // Configure platform
     OCPersistentStorage ps {client_open, fread, fwrite, fclose, unlink };
@@ -122,22 +153,36 @@ int main(int argc, char** argv) {
         &ps
     };
 
+    cfg.transportType = static_cast<OCTransportAdapter>(OCTransportAdapter::OC_ADAPTER_IP | 
+                                                    OCTransportAdapter::OC_ADAPTER_TCP);
+
+    cfg.QoS = OC::QualityOfService::LowQos;
+
     OCPlatform::Configure(cfg);
 
-    auto result = SetPlatformInfo(platformId, manufacturerName, manufacturerLink,
-            modelNumber, dateOfManufacture, platformVersion, operatingSystemVersion,
-            hardwareVersion, firmwareVersion, supportLink, systemTime);
+    OCStackResult result = SetPlatformInfo(gPlatformId, gManufacturerName, gManufacturerLink,
+        gModelNumber, gDateOfManufacture, gPlatformVersion, gOperatingSystemVersion,
+        gHardwareVersion, gFirmwareVersion, gSupportLink, gSystemTime);
 
-    result = OCPlatform::registerPlatformInfo(platformInfo);
-    if (result != OC_STACK_OK) {
-        Log::error(LOG_TAG, "Platform registration failed");
-        return -1;
+    try {
+        result = OCPlatform::registerPlatformInfo(platformInfo);
+    } catch (OC::OCException& e) {
+        Log::error("Execption: %s", e.what());
+        if (result != OC_STACK_OK) {
+            Log::error(LOG_TAG, "Platform registration failed");
+            return -1;
+        }    
     }
 
-    // Create resource
-    BinaryLightServer light("/a/light");
-    light.createResource();
-    light.disable();
+    LightHAL* lightHal = new LightHAL;
+
+    ShouseResourceServer lightServer("/a/light", "type", "iface", lightHal);
+    lightServer.createResource();
+    
+    // // Create resource
+    // BinaryLightServer light("/a/light");
+    // light.createResource();
+    // light.disable();
 
     // Start listen
     Log::info(LOG_TAG, "Listening...");

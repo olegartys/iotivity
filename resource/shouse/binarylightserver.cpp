@@ -17,7 +17,6 @@ OCEntityHandlerResult BinaryLightServer::entityHandler(std::shared_ptr<OC::OCRes
     if (request->getResourceUri() != mUri) {
         Log::error(LOG_TAG, "{}: request uri and real resource uri are not equal: {} {}",
                    request->getResourceUri(), mUri);
-        // response->setErrorCode(404);
         response->setResponseResult(OC_EH_RESOURCE_NOT_FOUND);
         return OC_EH_RESOURCE_NOT_FOUND;
     }
@@ -28,7 +27,6 @@ OCEntityHandlerResult BinaryLightServer::entityHandler(std::shared_ptr<OC::OCRes
             if (requestType == "GET") {
                 Log::info(LOG_TAG, "{}: GET for the {}", __FUNCTION__, mUri);
 
-                // response->setErrorCode(200);
                 response->setResponseResult(OC_EH_OK);
                 response->setResourceRepresentation(onGet());
 
@@ -49,7 +47,6 @@ OCEntityHandlerResult BinaryLightServer::entityHandler(std::shared_ptr<OC::OCRes
 
             } else {
                 Log::error(LOG_TAG, "{}: Unsupported request type: {}", __FUNCTION__, requestType);
-                // response->setErrorCode(404);
                 response->setResponseResult(OC_EH_METHOD_NOT_ALLOWED);
 
                 this->sendResponse(response);
@@ -69,13 +66,11 @@ OC::OCRepresentation BinaryLightServer::onGet() {
 void BinaryLightServer::onPut(const OC::OCRepresentation& repr, std::shared_ptr<OC::OCResourceResponse> response) {
     if (!repr.getValue("state", mState)) {
         Log::error(LOG_TAG, "{}: Error doing PUT for {}", __FUNCTION__, mUri);
-        // response->setErrorCode(200);
         response->setResponseResult(OC_EH_CONTENT);
         return;
     }
 
     syncModelWithRepr();
-    // response->setErrorCode(200);
     response->setResponseResult(OC_EH_OK);
 
     Log::debug(LOG_TAG, "{}: Light {} state set to {}", __FUNCTION__, mUri, mState);

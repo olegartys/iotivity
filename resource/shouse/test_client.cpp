@@ -38,9 +38,11 @@
 #include "OCPlatform.h"
 #include "OCApi.h"
 
-#include "baseresource_old.h"
-#include "lightresource.h"
-#include "binarylightclient.h"
+#include "Log.h"
+
+#include "baseresource.h"
+#include "shouse_res_hal.h"
+#include "shouse_res_client.h"
 
 using namespace OC;
 namespace PH = std::placeholders;
@@ -48,42 +50,52 @@ namespace PH = std::placeholders;
 static const char* SVR_DB_FILE_NAME = "./oic_svr_db_client.dat";
 static const char* LOG_TAG = "my_simpleclient";
 
+class LightHAL : public ShouseClientHAL {
+public:
+    virtual void onGet(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) override {
+        Log::info(LOG_TAG, "GET returned to client: {}", rep.getValue<int>("state"));
+
+        // Do something with new data
+        // Update UI, or something else
+    }
+
+    virtual void onPut(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) override {
+        Log::info(LOG_TAG, "PUT returned to client");
+
+        // Do something with new data
+        // Update UI, or something else
+    }
+
+};
+
 static FILE* client_open(const char* /*path*/, const char *mode)
 {
     return fopen(SVR_DB_FILE_NAME, mode);
 }
 
-std::shared_ptr<BinaryLightClient> pBinaryLight(nullptr);
+ShouseResourceClient *lightClient;
 
 void onFoundResource(std::shared_ptr<OCResource> resource) {
     Log::debug(LOG_TAG, "{}: resource found {}", __FUNCTION__, resource->uri());
 
     if (resource->uri() == "/a/light") {
+        ShouseClientHAL *hal = new LightHAL;
+        lightClient = new ShouseResourceClient("/a/light", "t", "iface", hal);
+        lightClient->setResource(resource);
 
-        pBinaryLight = std::make_shared<BinaryLightClient>();
         QueryParamsMap test;
-        Log::debug(LOG_TAG, "{}: GET for /a/light", __FUNCTION__);
-        auto onGet = std::bind(&BinaryLightClient::onGet, pBinaryLight.get(), PH::_1, PH::_2, PH::_3);
-        resource->get(test, onGet);
+        lightClient->get(test);
 
-        while (1) {
-            std::cout << "HEREMAIN: " << std::this_thread::get_id() << std::endl;
-            auto onGet = std::bind(&BinaryLightClient::onGet, pBinaryLight.get(), PH::_1, PH::_2, PH::_3);
-            resource->get(test, onGet);
-            sleep(2);
-//            pBinaryLight->enable();
-//            Log::debug(LOG_TAG, "{}: enable light, PUT for /a/light", __FUNCTION__);
-//            auto onPut = std::bind(&BinaryLightClient::onPut, pBinaryLight.get(), PH::_1, PH::_2, PH::_3);
-//            resource->put(pBinaryLight->type(), pBinaryLight->iface(), pBinaryLight->repr(), test, onPut);
+        sleep(1);
 
-//            sleep(3);
+        auto state = lightClient->repr().getValue<int>("state");
 
-//            pBinaryLight->disable();
-//            Log::debug(LOG_TAG, "{}: disable light, PUT for /a/light", __FUNCTION__);
-//            resource->put(pBinaryLight->type(), pBinaryLight->iface(), pBinaryLight->repr(), test, onPut);
+        Log::debug(LOG_TAG, "Current state: {}", state);
 
-//            sleep(5);
-        }
+        state++;
+        lightClient->repr().setValue("state", state);
+
+        lightClient->put(test);
     }
 }
 

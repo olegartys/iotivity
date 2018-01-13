@@ -18,6 +18,9 @@ if shouse_env.get('SECURED') != '0':
 compiler = shouse_env.get('CXX')
 target_os = shouse_env.get('TARGET_OS')
 
+shouse_env.AppendUnique(CXXFLAGS = ['-Wpedantic'])
+shouse_env.AppendUnique(CXXFLAGS = ['-Wall'])
+
 if 'g++' in compiler:
     shouse_env.AppendUnique(CXXFLAGS = ['-std=c++11'])
 

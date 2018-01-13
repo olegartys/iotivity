@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <mutex>
 #include <condition_variable>
+
 #include "OCPlatform.h"
 #include "OCApi.h"
 
@@ -44,11 +45,11 @@
 
 #include <shouse/baseresource.h>
 #include <shouse/Log.h>
+#include <shouse_default_platform.h>
 
 using namespace OC;
 namespace PH = std::placeholders;
 
-static const char* SVR_DB_FILE_NAME = "./oic_svr_db_client.dat";
 static const char* LOG_TAG = "my_simpleclient";
 
 class LightHAL : public ShouseClientHAL {
@@ -68,11 +69,6 @@ public:
     }
 
 };
-
-static FILE* client_open(const char* /*path*/, const char *mode)
-{
-    return fopen(SVR_DB_FILE_NAME, mode);
-}
 
 ShouseResourceClient *lightClient;
 
@@ -105,18 +101,7 @@ void onFoundResourceError(const std::string& err, const int err_t) {
 }
 
 int main(int argc, char** argv) {
-    OCPersistentStorage ps {client_open, fread, fwrite, fclose, unlink };
-    // Create PlatformConfig object
-    PlatformConfig cfg {
-        OC::ServiceType::InProc,
-        OC::ModeType::Both,
-        "0.0.0.0",
-        0,
-        OC::QualityOfService::HighQos,
-        &ps
-    };
-
-    OCPlatform::Configure(cfg);
+    ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_CLIENT>();
 
     // Finding resources
     std::stringstream requestURI;

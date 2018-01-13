@@ -46,6 +46,13 @@ shouse_core_src = [
     'src/shouse_res_srv.cpp'
 ]
 
+shouse_utils_src = [
+    'src/shouse_default_platform.cpp'
+]
+
 shouse_core = shouse_sdk_env.SharedLibrary('shouse_core', shouse_core_src)
+shouse_utils = shouse_sdk_env.SharedLibrary('shouse_utils', shouse_utils_src)
 
 shouse_sdk_env.InstallTarget(shouse_core, 'libshouse_core')
+shouse_sdk_env.InstallTarget(shouse_utils, 'libshouse_utils')
+

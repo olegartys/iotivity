@@ -1,0 +1,7 @@
+Import('shouse_env')
+
+SConscript('#resource/shouse/apps/raml_test/SConscript')
+SConscript('#resource/shouse/apps/hal_test/SConscript')
+
+# Legacy apps
+SConscript('#resource/shouse/apps/legacy/SConscript')

@@ -45,6 +45,6 @@ public:
 
 };
 
-#include <LogImpl.h>
+#include "LogImpl.h"
 
 #endif //SHOUSESERVERCOMPONENT_ILOG_H

@@ -1,0 +1,43 @@
+Import('shouse_env')
+
+hal_test_env = shouse_env.Clone()
+
+hal_test_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/resource/shouse',
+		'#/resource/shouse/spdlog',
+		'#/service/simulator/ramlparser/raml',
+		'#/service/simulator/ramlparser/raml/model',
+		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+		'#/extlibs/yaml/yaml/include',
+
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/'
+        ])
+
+# IoTivity libs
+hal_test_env.AppendUnique(RPATH = [hal_test_env.get('BUILD_DIR')])
+hal_test_env.PrependUnique(LIBS = ['coap'])
+
+hal_test_env.AppendUnique(LIBS = ['octbstack'])
+hal_test_env.AppendUnique(LIBS = ['oc'])
+
+hal_test_env.AppendUnique(LIBS = ['ocsrm'])
+
+hal_test_env.AppendUnique(LIBS = ['RamlParser'])
+
+hal_test_env.AppendUnique(LIBS = ['shouse_core'])
+
+# HAL-based interface
+hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
+hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
+
+hal_test_env.AppendTarget('hal_test')

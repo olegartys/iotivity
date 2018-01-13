@@ -1,0 +1,51 @@
+Import('shouse_env')
+
+shouse_sdk_env = shouse_env.Clone()
+
+######################################################################
+# Build flags
+######################################################################
+
+# Include paths
+shouse_sdk_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/service/simulator/ramlparser/raml',
+		'#/service/simulator/ramlparser/raml/model',
+		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+		'#/extlibs/yaml/yaml/include',
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/'
+])
+
+# IoTivity libs
+shouse_sdk_env.AppendUnique(RPATH = [shouse_sdk_env.get('BUILD_DIR')])
+shouse_sdk_env.PrependUnique(LIBS = ['coap'])
+
+shouse_sdk_env.AppendUnique(LIBS = ['octbstack'])
+shouse_sdk_env.AppendUnique(LIBS = ['oc'])
+
+shouse_sdk_env.AppendUnique(LIBS = ['ocsrm'])
+
+shouse_sdk_env.AppendUnique(LIBS = ['RamlParser'])
+
+
+######################################################################
+# Source files and Targets
+######################################################################
+
+shouse_core_src = [
+    'src/shouse_res_client.cpp',
+    'src/shouse_res_srv.cpp'
+]
+
+shouse_core = shouse_sdk_env.SharedLibrary('shouse_core', shouse_core_src)
+
+shouse_sdk_env.InstallTarget(shouse_core, 'libshouse_core')

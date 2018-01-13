@@ -1,8 +1,8 @@
 #include <functional>
 
-#include "shouse_res_client.h"
+#include <shouse_res_client.h>
 
-#include "Log.h"
+#include <shouse/Log.h>
 
 using namespace OC;
 using namespace std::placeholders;

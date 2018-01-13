@@ -40,11 +40,12 @@
 #include <windows.h>
 #endif
 
-#include "baseresource.h"
-#include "shouse_res_hal.h"
-#include "shouse_res_srv.h"
+#include <shouse_res_srv.h>
 
-#include "Log.h"
+#include <HAL/shouse_res_hal.h>
+
+#include <shouse/baseresource.h>
+#include <shouse/Log.h>
 
 #include "ocpayload.h"
 

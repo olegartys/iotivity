@@ -38,11 +38,12 @@
 #include "OCPlatform.h"
 #include "OCApi.h"
 
-#include "Log.h"
+#include <shouse_res_client.h>
 
-#include "baseresource.h"
-#include "shouse_res_hal.h"
-#include "shouse_res_client.h"
+#include <HAL/shouse_res_hal.h>
+
+#include <shouse/baseresource.h>
+#include <shouse/Log.h>
 
 using namespace OC;
 namespace PH = std::placeholders;

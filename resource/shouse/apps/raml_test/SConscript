@@ -1,0 +1,40 @@
+Import('shouse_env')
+
+raml_test_env = shouse_env.Clone()
+
+raml_test_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/resource/shouse',
+		'#/resource/shouse/spdlog',
+		'#/service/simulator/ramlparser/raml',
+		'#/service/simulator/ramlparser/raml/model',
+		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+		'#/extlibs/yaml/yaml/include',
+
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/'
+])
+
+# IoTivity libs
+raml_test_env.AppendUnique(RPATH = [raml_test_env.get('BUILD_DIR')])
+raml_test_env.PrependUnique(LIBS = ['coap'])
+
+raml_test_env.AppendUnique(LIBS = ['octbstack'])
+raml_test_env.AppendUnique(LIBS = ['oc'])
+
+raml_test_env.AppendUnique(LIBS = ['ocsrm'])
+
+raml_test_env.AppendUnique(LIBS = ['RamlParser'])
+
+
+raml_test_env.Program('raml_test', ['raml_test.cpp'])
+
+raml_test_env.AppendTarget('raml_test')

@@ -1,8 +1,9 @@
 #ifndef SHOUSE_RES_SRV_H
 #define SHOUSE_RES_SRV_H
 
-#include "baseresource.h"
-#include "shouse_res_hal.h"
+#include <HAL/shouse_res_hal.h>
+
+#include <shouse/baseresource.h>
 
 class ShouseResourceServer : public BaseResourceServer {
 public:

@@ -1,7 +1,8 @@
 #include <functional>
 
-#include "shouse_res_srv.h"
-#include "Log.h"
+#include <shouse_res_srv.h>
+
+#include <shouse/Log.h>
 
 using namespace std::placeholders;
 

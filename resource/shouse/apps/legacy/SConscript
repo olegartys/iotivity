@@ -1,0 +1,85 @@
+Import('env')
+
+##
+# Examples build script
+##
+lib_env = env.Clone()
+SConscript('#build_common/thread.scons', exports = {'thread_env' : lib_env})
+
+# Add third party libraries
+SConscript('#resource/third_party_libs.scons', 'lib_env')
+shouse_env_legacy = lib_env.Clone()
+
+target_os = shouse_env_legacy.get('TARGET_OS')
+
+shouse_env_legacy.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/resource/shouse/sdk',
+		'#/service/simulator/ramlparser/raml',
+		'#/service/simulator/ramlparser/raml/model',
+		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+		'#/extlibs/yaml/yaml/include',
+        '#/resource/shouse/sdk/include/shouse',
+])
+
+# OpenCV libs
+shouse_env_legacy.AppendUnique(LIBS = ['opencv_imgproc'])
+shouse_env_legacy.AppendUnique(LIBS = ['opencv_core'])
+shouse_env_legacy.AppendUnique(LIBS = ['opencv_videoio']) 
+shouse_env_legacy.AppendUnique(LIBS = ['opencv_highgui']) 
+shouse_env_legacy.AppendUnique(LIBS = ['opencv_imgcodecs']) 
+
+# IoTivity libs
+shouse_env_legacy.AppendUnique(RPATH = [shouse_env_legacy.get('BUILD_DIR')])
+shouse_env_legacy.PrependUnique(LIBS = ['coap'])
+
+shouse_env_legacy.AppendUnique(LIBS = ['octbstack'])
+shouse_env_legacy.AppendUnique(LIBS = ['oc'])
+
+shouse_env_legacy.AppendUnique(LIBS = ['ocsrm'])
+
+shouse_env_legacy.AppendUnique(LIBS = ['RamlParser'])
+
+compiler = shouse_env_legacy.get('CXX')
+if 'g++' in compiler:
+    shouse_env_legacy.AppendUnique(CXXFLAGS = ['-std=c++11'])
+
+if target_os in ['msys_nt', 'windows']:
+    shouse_env_legacy.PrependUnique(LIBS = ['mswsock', 'ws2_32', 'iphlpapi', 'ole32'])
+else:
+    shouse_env_legacy.PrependUnique(LIBS = ['oc_logger'])
+
+if shouse_env_legacy.get('SECURED') == '1':
+    shouse_env_legacy.AppendUnique(LIBS = ['mbedtls', 'mbedx509','mbedcrypto'])
+    if target_os in ['msys_nt', 'windows']:
+        shouse_env_legacy.AppendUnique(LIBS = ['advapi32'])
+
+if target_os == 'android':
+    shouse_env_legacy.AppendUnique(CXXFLAGS = ['-frtti', '-fexceptions'])
+    shouse_env_legacy.AppendUnique(LIBS = ['gnustl_shared'])
+
+    if not shouse_env_legacy.get('RELEASE'):
+        shouse_env_legacy.AppendUnique(LIBS = ['log'])
+
+if target_os in ['msys_nt', 'windows']:
+    shouse_env_legacy.AppendUnique(LIBS = ['Comctl32', 'Gdi32', 'User32'])
+
+# Old interface
+shouse_env_legacy.Program('my_simpleserver', ['my_simpleserver.cpp', 'binarylightserver.cpp'])
+
+shouse_env_legacy.Program('my_simpleclient', ['my_simpleclient.cpp', 'binarylightclient.cpp'])
+
+shouse_env_legacy.Program('videocameraserver', ['videocameraserverprocess.cpp', 'videocameraserver.cpp'])
+
+shouse_env_legacy.Program('videocameraclient', ['videocameraclientprocess.cpp', 'videocameraclient.cpp'])
+
+Alias("shouse_legacy")
+shouse_env_legacy.AppendTarget('shouse_legacy')

@@ -3,24 +3,20 @@
 
 #include <HAL/shouse_res_hal.h>
 
-#include <shouse/baseresource.h>
+#include <shouse/base_resource_client.h>
 
-class ShouseResourceClient : public BaseResourceClient {
+#include <dynamic_resource/dynamic_resource.h>
+
+class ShouseResourceClient : public BaseResourceClient<DynamicDataResource> {
 public:
 	ShouseResourceClient(const std::string& uri, const std::string& type, const std::string& iface, ShouseClientHAL* hal) :
-		BaseResourceClient(uri, type, iface), mHal(hal)
-	{ }
-
-	virtual void setResource(const std::shared_ptr<OC::OCResource>& resource) override {
-		mResource = resource;
-	}
+		BaseResourceClient(uri, type, iface), mHal(hal) {}
 
 	virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap) override;
 
     virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap) override;
 
 protected:
-	std::shared_ptr<OC::OCResource> mResource;
 	ShouseClientHAL* mHal;
 
 	virtual void onGet(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode);

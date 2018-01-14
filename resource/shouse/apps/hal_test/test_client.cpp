@@ -43,7 +43,7 @@
 
 #include <HAL/shouse_res_hal.h>
 
-#include <shouse/baseresource.h>
+#include <shouse/base_resource.h>
 #include <shouse/Log.h>
 #include <shouse_default_platform.h>
 
@@ -55,7 +55,7 @@ static const char* LOG_TAG = "my_simpleclient";
 class LightHAL : public ShouseClientHAL {
 public:
     virtual void onGet(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) override {
-        Log::info(LOG_TAG, "GET returned to client: {}", rep.getValue<int>("state"));
+        Log::info(LOG_TAG, "GET returned to client: {}", rep.getValue<std::string>("lightness"));
 
         // Do something with new data
         // Update UI, or something else
@@ -68,6 +68,16 @@ public:
         // Update UI, or something else
     }
 
+    virtual std::vector<ResourceProperty> getProperties() const override {
+        ResourceProperty prop;
+        prop.mName = "lightness";
+        prop.mType = ResourceProperty::Type::T_STRING;
+        prop.mDefaultValue = "2";
+
+        std::vector<ResourceProperty> vec{prop};
+        return vec;
+    }
+
 };
 
 ShouseResourceClient *lightClient;
@@ -78,21 +88,21 @@ void onFoundResource(std::shared_ptr<OCResource> resource) {
     if (resource->uri() == "/a/light") {
         ShouseClientHAL *hal = new LightHAL;
         lightClient = new ShouseResourceClient("/a/light", "t", "iface", hal);
-        lightClient->setResource(resource);
+        lightClient->setOCResource(resource);
 
         QueryParamsMap test;
         lightClient->get(test);
 
         sleep(1);
 
-        auto state = lightClient->repr().getValue<int>("state");
+        auto state = lightClient->repr().getValue<std::string>("lightness");
 
-        Log::debug(LOG_TAG, "Current state: {}", state);
+        Log::debug(LOG_TAG, "Current lightness: {}", state);
 
-        state++;
-        lightClient->repr().setValue("state", state);
+        // state++;
+        // lightClient->repr().setValue("state", state);
 
-        lightClient->put(test);
+        // lightClient->put(test);
     }
 }
 

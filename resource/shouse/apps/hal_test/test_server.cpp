@@ -41,13 +41,19 @@
 #include <windows.h>
 #endif
 
+#include <vector>
+
 #include <shouse_res_srv.h>
 #include <shouse_default_platform.h>
 
 #include <HAL/shouse_res_hal.h>
 
-#include <shouse/baseresource.h>
+#include <shouse/base_resource.h>
 #include <shouse/Log.h>
+
+
+#include <dynamic_resource/dynamic_resource.h>
+
 
 #include "ocpayload.h"
 
@@ -57,26 +63,41 @@ using namespace std;
 static const char* LOG_TAG = "test_server";
 
 
-class LightHAL : public ShouseResHAL {
+class LightHAL : public ShouseServerHAL {
 public:
-    int onGet(OCRepresentation& curRepr, const QueryParamsMap& params) noexcept override {
-        int ret = 0;
+    ShouseHALResult onGet(const std::string& propName, std::string& resultValue, const OC::QueryParamsMap& params) override {
+        ShouseHALResult ret = ShouseHALResult::OK;
 
-        mState++;
-        Log::info(LOG_TAG, "Get something: {}", curRepr.getValue<int>("state"));
-
-        curRepr.setValue("state", mState);
+        if (propName == "lightness") {
+            Log::info(LOG_TAG, "Get something: {}", propName); 
+            mState++;
+            resultValue = std::to_string(mState);
+        } else {
+            ret = ShouseHALResult::ERR;
+        }
 
         return ret;
     }
 
-    int onPut(OCRepresentation& curRepr, const QueryParamsMap& params) noexcept override {
-        int ret = 0;
+    ShouseHALResult onPut(const std::string& propName, const std::string& newValue, const OC::QueryParamsMap& params) override {
+        ShouseHALResult ret = ShouseHALResult::OK;
 
-        curRepr.getValue("state", mState);
+        //curRepr.getValue("state", mState);
         Log::info(LOG_TAG, "Put something: {}", mState);
 
         return ret;        
+    }
+
+    virtual std::vector<ResourceProperty> getProperties() const override {
+        // std::string props = "{ \"name\": \"lightness\", \"type\": \"string\", \"default_value\": \"2\"}";
+
+        ResourceProperty prop;
+        prop.mName = "lightness";
+        prop.mType = ResourceProperty::Type::T_STRING;
+        prop.mDefaultValue = "2";
+
+        std::vector<ResourceProperty> vec{prop};
+        return vec;
     }
 
 private:
@@ -87,10 +108,22 @@ private:
 int main(int argc, char** argv) {
     ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_SERVER>();
 
+    // std::string str = "{ \"properties\" : [ { \"name\": \"lightness\", \"type\": \"string\", \"default_value\": \"2\"} ] }";
+
+    // DynamicDataResource dyn_res("/a/light", "", "");
+
+    // dyn_res.init(str);
+
+    // auto t = dyn_res.repr().getValue<string>("lightness");
+    // Log::info(LOG_TAG, "lightness={}", t);
+
     LightHAL* lightHal = new LightHAL;
 
-    ShouseResourceServer lightServer("/a/light", "type", "iface", lightHal);
-    lightServer.createResource();
+    ShouseResourceServer lightServer("/a/light", "type", "iface");
+    if (!lightServer.createResource(lightHal)) {
+        Log::error(LOG_TAG, "Error creating resource");
+    }
+
 
     // Start listen
     Log::info(LOG_TAG, "Listening...");

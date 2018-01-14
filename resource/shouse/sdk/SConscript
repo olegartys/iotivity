@@ -36,6 +36,8 @@ shouse_sdk_env.AppendUnique(LIBS = ['ocsrm'])
 
 shouse_sdk_env.AppendUnique(LIBS = ['RamlParser'])
 
+shouse_sdk_env.AppendUnique(LIBS = ['cjson'])
+
 
 ######################################################################
 # Source files and Targets
@@ -43,11 +45,13 @@ shouse_sdk_env.AppendUnique(LIBS = ['RamlParser'])
 
 shouse_core_src = [
     'src/shouse_res_client.cpp',
-    'src/shouse_res_srv.cpp'
+    'src/shouse_res_srv.cpp',
+    'src/resource_property.cpp',
+    'src/dynamic_resource.cpp'
 ]
 
 shouse_utils_src = [
-    'src/shouse_default_platform.cpp'
+    'src/shouse_default_platform.cpp',
 ]
 
 shouse_core = shouse_sdk_env.SharedLibrary('shouse_core', shouse_core_src)

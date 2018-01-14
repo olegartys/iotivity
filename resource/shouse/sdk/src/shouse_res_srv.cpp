@@ -4,15 +4,38 @@
 
 #include <shouse/Log.h>
 
-using namespace std::placeholders;
+using namespace OC;
+using namespace std::placeholders; 
 
-OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OC::OCResourceRequest> request) {
+bool ShouseResourceServer::createResource(ShouseServerHAL* hal) {
+    if (!hal) {
+        Log::error(LOG_TAG, "HAL pointer is invalid");
+        return false;
+    }
+
+    mHal = hal;
+
+    // Initialize underlying Resource with resource properties
+    mResource->init(mHal->getProperties());
+
+    // Register callback for resource requests
+    EntityHandler cb = std::bind(&ShouseResourceServer::entityHandler, this, _1);
+
+    // Make the resource visible over the network
+    auto _uri = mResource->uri();
+
+    auto regResult = OCPlatform::registerResource(mResourceHandle, _uri, type(), iface(), cb, (uint8_t)(OC_DISCOVERABLE | OC_OBSERVABLE));
+
+    return regResult == OC_STACK_OK;
+}
+
+OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OCResourceRequest> request) {
     OCEntityHandlerResult ret = OC_EH_ERROR;
 
     std::string requestType = request->getRequestType();
     int requestFlag = request->getRequestHandlerFlag();
 
-    auto response = std::make_shared<OC::OCResourceResponse>();
+    auto response = std::make_shared<OCResourceResponse>();
 
     // NOTE: setting handles is vital as iotivity doesn't know what
     // client routine to call when response is sent
@@ -22,9 +45,9 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OC::OC
     Log::info(LOG_TAG, "{}: New request with id = {}", __FUNCTION__, request->getMessageID());
 
     // Check the request destination
-    if (request->getResourceUri() != mUri) {
+    if (request->getResourceUri() != mResource->uri()) {
         Log::error(LOG_TAG, "{}: request uri and real resource uri are not equal: {} {}",
-                   request->getResourceUri(), mUri);
+                   request->getResourceUri(), mResource->uri());
 
         response->setResponseResult(OC_EH_RESOURCE_NOT_FOUND);
 
@@ -33,30 +56,19 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OC::OC
 
     if (request) {
     	auto clientRepresentation = request->getResourceRepresentation();
+        auto queryParams = request->getQueryParameters();
 
         // TODO: research Observe flag
-        if (requestFlag & OC::RequestHandlerFlag::RequestFlag) {
+        if (requestFlag & RequestHandlerFlag::RequestFlag) {
             if (requestType == "GET") {
-                Log::info(LOG_TAG, "{}: GET for the {}", __FUNCTION__, mUri);
-
-                mResourceRepr = clientRepresentation;
-
-                auto halRet = mHal->onGet(repr(), request->getQueryParameters());
-
-                Log::info(LOG_TAG, "HAL returned: {}", halRet);
-
-                ret = halRet == 0 ? OC_EH_OK : OC_EH_ERROR;
+                Log::info(LOG_TAG, "{}: GET for the {}", __FUNCTION__, mResource->uri());
+                
+                ret = handleGET(queryParams) ? OC_EH_OK : OC_EH_ERROR;
 
             } else if (requestType == "PUT") {
-                Log::info(LOG_TAG, "{}: PUT for the {}", __FUNCTION__, mUri);
-
-				mResourceRepr = clientRepresentation;
-
-                auto halRet = mHal->onPut(repr(), request->getQueryParameters());
-
-                Log::info(LOG_TAG, "HAL returned: {}", halRet);
-
-                ret = halRet == 0 ? OC_EH_OK : OC_EH_ERROR;
+                Log::info(LOG_TAG, "{}: PUT for the {}", __FUNCTION__, mResource->uri());
+                
+                ret = handlePUT(clientRepresentation, queryParams) ? OC_EH_OK : OC_EH_ERROR;
 
             } else {
                 Log::error(LOG_TAG, "{}: Unsupported request type: {}", __FUNCTION__, requestType);
@@ -66,23 +78,63 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OC::OC
         }
 
         response->setResponseResult(ret);
-        response->setResourceRepresentation(mResourceRepr);
+        response->setResourceRepresentation(mResource->repr());
 
-        this->sendResponse(response);
+        sendResponse(response);
     }
 
     return ret;
 }
 
-OCStackResult ShouseResourceServer::createResource() {
-	OC::EntityHandler cb = std::bind(&ShouseResourceServer::entityHandler, this, _1);
+bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
+    ShouseHALResult halRet;
 
-    return OC::OCPlatform::registerResource(mResourceHandle, mUri, mType, mIface, cb, (uint8_t)(OC_DISCOVERABLE | OC_OBSERVABLE));
+    for (const auto& prop: mHal->getProperties()) {
+        // Request property from HAL
+        std::string propValue;
+        halRet = mHal->onGet(prop.mName, propValue, params);
+
+        if (halRet != ShouseHALResult::OK) {
+            Log::error(LOG_TAG, "HAL failed to get {}", prop.mName);
+            return false;
+        }
+
+        // Update the representation with the new value
+        repr().setValue(prop.mName, propValue);                 
+    }
+
+    return true;
 }
 
-void ShouseResourceServer::sendResponse(const std::shared_ptr<OC::OCResourceResponse>& resp) const {
+bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentation, const QueryParamsMap& params) {
+    ShouseHALResult halRet = ShouseHALResult::ERR;
+
+    for (const auto& prop: mHal->getProperties()) {
+        // Request property from HAL
+        std::string newValue;
+        bool ret = clientRepresentation.getValue(prop.mName, newValue);
+        if (!ret) {
+            Log::error(LOG_TAG, "Error getting value {} from OCRepr", prop.mName);
+            break;
+        }
+
+        halRet = mHal->onPut(prop.mName, newValue, params);
+
+        if (halRet != ShouseHALResult::OK) {
+            Log::error(LOG_TAG, "HAL failed to set {}", prop.mName);
+            return false;
+        }
+
+        // Update the representation with the new value
+        repr().setValue(prop.mName, newValue);
+    }
+
+    return true;
+}
+
+void ShouseResourceServer::sendResponse(const std::shared_ptr<OCResourceResponse>& resp) const {
     Log::info(LOG_TAG, "{}: Sending response...", __FUNCTION__);
-    if (OC::OCPlatform::sendResponse(resp) != OC_STACK_OK) {
+    if (OCPlatform::sendResponse(resp) != OC_STACK_OK) {
         Log::error(LOG_TAG, "{}: failed!", __FUNCTION__);
     }
 }

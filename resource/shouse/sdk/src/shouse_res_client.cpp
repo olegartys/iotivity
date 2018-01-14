@@ -12,9 +12,9 @@ OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParameter
 
 	auto onGet = std::bind(&ShouseResourceClient::onGet, this, _1, _2, _3);
 
-	ret = mResource->get(queryParametersMap, onGet);
+	ret = mOCResource->get(queryParametersMap, onGet);
 
-	return ret;
+	return ret; 
 }
 
 OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap) {
@@ -22,17 +22,17 @@ OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap
 
 	auto onPut = std::bind(&ShouseResourceClient::onPut, this, _1, _2, _3);
 
-	ret = mResource->put(mResourceRepr, queryParametersMap, onPut);
+	ret = mOCResource->put(mResource->repr(), queryParametersMap, onPut);
 
 	return ret;
 }
 
 void ShouseResourceClient::onGet(const OC::HeaderOptions& opts, const OC::OCRepresentation& rep, const int eCode) {
-	mResourceRepr = rep;
-	mHal->onGet(opts, mResourceRepr, eCode);
+	mResource->setRepr(rep);
+	mHal->onGet(opts, mResource->repr(), eCode);
 }	
 
 void ShouseResourceClient::onPut(const OC::HeaderOptions& opts, const OC::OCRepresentation& rep, const int eCode) {
-	mResourceRepr = rep;
-	mHal->onPut(opts, mResourceRepr, eCode);
+	mResource->setRepr(rep);
+	mHal->onPut(opts, mResource->repr(), eCode);
 }

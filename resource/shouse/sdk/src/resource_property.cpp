@@ -2,7 +2,7 @@
 
 #include <cJSON.h>
 
-#include <shouse/dynamic_resource/resource_property.h>
+#include <dynamic_resource/resource_property.h>
 
 static ResourceProperty::Type strToPropertyType(const char *str) {
 	if (!strcmp(str, "string")) {

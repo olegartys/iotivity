@@ -1,6 +1,6 @@
 #include <cJSON.h>
 
-#include <shouse/dynamic_resource/dynamic_resource.h>
+#include <dynamic_resource/dynamic_resource.h>
 
 #include <shouse/Log.h>
 

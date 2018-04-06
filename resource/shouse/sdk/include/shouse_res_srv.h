@@ -13,6 +13,8 @@ class ShouseResourceServer : public BaseResourceServer<DynamicDataResource> {
 public:
 	ShouseResourceServer(const std::string& uri, const std::string& type, const std::string& iface) : BaseResourceServer(uri, type, iface) {}
 
+	~ShouseResourceServer();
+
 	virtual bool createResource(ShouseServerHAL* hal);
 
 protected:
@@ -24,6 +26,7 @@ protected:
 
 protected:
 	ShouseServerHAL* mHal;
+	int mId;
 
 private:
 	bool handleGET(const OC::QueryParamsMap& params);

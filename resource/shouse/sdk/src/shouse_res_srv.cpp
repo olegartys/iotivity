@@ -15,8 +15,15 @@ bool ShouseResourceServer::createResource(ShouseServerHAL* hal) {
 
     mHal = hal;
 
+    // Try to obtain id of device from HAL
+    mId = mHal->open();
+    if (mId < 0) {
+        Log::error(LOG_TAG, "Error openning HAL device");
+        return false;
+    }
+
     // Initialize underlying Resource with resource properties
-    mResource->init(mHal->getProperties());
+    mResource->init(mHal->properties());
 
     // Register callback for resource requests
     EntityHandler cb = std::bind(&ShouseResourceServer::entityHandler, this, _1);
@@ -89,10 +96,10 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OCReso
 bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
     ShouseHALResult halRet;
 
-    for (const auto& prop: mHal->getProperties()) {
+    for (const auto& prop: mHal->properties()) {
         // Request property from HAL
         std::string propValue;
-        halRet = mHal->onGet(prop.mName, propValue, params);
+        halRet = mHal->get(mId, prop.mName, propValue, params);
 
         if (halRet != ShouseHALResult::OK) {
             Log::error(LOG_TAG, "HAL failed to get {}", prop.mName);
@@ -109,7 +116,7 @@ bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
 bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentation, const QueryParamsMap& params) {
     ShouseHALResult halRet = ShouseHALResult::ERR;
 
-    for (const auto& prop: mHal->getProperties()) {
+    for (const auto& prop: mHal->properties()) {
         // Request property from HAL
         std::string newValue;
         bool ret = clientRepresentation.getValue(prop.mName, newValue);
@@ -118,7 +125,7 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
             break;
         }
 
-        halRet = mHal->onPut(prop.mName, newValue, params);
+        halRet = mHal->put(mId, prop.mName, newValue, params);
 
         if (halRet != ShouseHALResult::OK) {
             Log::error(LOG_TAG, "HAL failed to set {}", prop.mName);
@@ -136,5 +143,13 @@ void ShouseResourceServer::sendResponse(const std::shared_ptr<OCResourceResponse
     Log::info(LOG_TAG, "{}: Sending response...", __FUNCTION__);
     if (OCPlatform::sendResponse(resp) != OC_STACK_OK) {
         Log::error(LOG_TAG, "{}: failed!", __FUNCTION__);
+    }
+}
+
+ShouseResourceServer::~ShouseResourceServer() {
+    // Close HAL device
+
+    if (mHal) {
+        mHal->close(mId);
     }
 }

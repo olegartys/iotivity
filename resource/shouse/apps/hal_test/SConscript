@@ -37,8 +37,13 @@ hal_test_env.AppendUnique(LIBS = ['RamlParser'])
 hal_test_env.AppendUnique(LIBS = ['shouse_core'])
 hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
 
+# hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
+
 # HAL-based interface
 hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
 hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
+
+# DLL Light HAL module
+hal_test_env.SharedLibrary('HAL_light', ['test_dll_hal.cpp'])
 
 hal_test_env.AppendTarget('hal_test')

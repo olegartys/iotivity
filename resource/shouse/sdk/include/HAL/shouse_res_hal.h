@@ -18,13 +18,31 @@ enum class ShouseHALResult: int {
 
 class ShouseServerHAL {
 public:
-	virtual ShouseHALResult onGet(const std::string& propName, std::string& resultValue, const OC::QueryParamsMap& params) = 0;
+	virtual ~ShouseServerHAL() = default;
 
-	virtual ShouseHALResult onPut(const std::string& propName, const std::string& newValue, const OC::QueryParamsMap& params) = 0;
+	virtual int open() = 0;
 
-	virtual std::vector<ResourceProperty> getProperties() const = 0;
+	virtual ShouseHALResult close(int id) = 0;
+
+	virtual ShouseHALResult get(int id, const std::string& propName,
+		std::string& resultValue, const OC::QueryParamsMap& params) = 0;
+
+	virtual ShouseHALResult put(int id, const std::string& propName,
+		const std::string& newValue, const OC::QueryParamsMap& params) = 0;
+
+	virtual std::vector<ResourceProperty> properties() const = 0;
+
+public:
+	using open_t = int(*)();
+	using close_t = ShouseHALResult(*)(int);
+	using get_t = ShouseHALResult(*)(int, const std::string&, std::string&,
+		const OC::QueryParamsMap&);
+	using put_t = ShouseHALResult(*)(int, const std::string&,
+		const std::string&, const OC::QueryParamsMap&);
+	using properties_t = std::vector<ResourceProperty>(*)();
 
 };
+
 
 class ShouseClientHAL {
 public:

@@ -47,6 +47,7 @@
 #include <shouse_default_platform.h>
 
 #include <HAL/shouse_res_hal.h>
+#include <HAL/shouse_res_hal_dll.h>
 
 #include <shouse/base_resource.h>
 #include <shouse/Log.h>
@@ -62,10 +63,20 @@ using namespace std;
 
 static const char* LOG_TAG = "test_server";
 
+// #define STATIC_HAL
 
+#ifdef STATIC_HAL
 class LightHAL : public ShouseServerHAL {
 public:
-    ShouseHALResult onGet(const std::string& propName, std::string& resultValue, const OC::QueryParamsMap& params) override {
+    int open() {
+        return 0;
+    }
+
+    ShouseHALResult close(int id) {
+        return ShouseHALResult::OK;
+    }
+    
+    ShouseHALResult get(int id, const std::string& propName, std::string& resultValue, const OC::QueryParamsMap& params) override {
         ShouseHALResult ret = ShouseHALResult::OK;
 
         if (propName == "lightness") {
@@ -79,7 +90,7 @@ public:
         return ret;
     }
 
-    ShouseHALResult onPut(const std::string& propName, const std::string& newValue, const OC::QueryParamsMap& params) override {
+    ShouseHALResult put(int id, const std::string& propName, const std::string& newValue, const OC::QueryParamsMap& params) override {
         ShouseHALResult ret = ShouseHALResult::OK;
 
         //curRepr.getValue("state", mState);
@@ -88,7 +99,7 @@ public:
         return ret;        
     }
 
-    virtual std::vector<ResourceProperty> getProperties() const override {
+    virtual std::vector<ResourceProperty> properties() const override {
         // std::string props = "{ \"name\": \"lightness\", \"type\": \"string\", \"default_value\": \"2\"}";
 
         ResourceProperty prop;
@@ -104,26 +115,35 @@ private:
     int mState = 0;
 
 };
+#endif
 
 int main(int argc, char** argv) {
     ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_SERVER>();
 
-    // std::string str = "{ \"properties\" : [ { \"name\": \"lightness\", \"type\": \"string\", \"default_value\": \"2\"} ] }";
+    // Use HAL implemented at compile time
 
-    // DynamicDataResource dyn_res("/a/light", "", "");
-
-    // dyn_res.init(str);
-
-    // auto t = dyn_res.repr().getValue<string>("lightness");
-    // Log::info(LOG_TAG, "lightness={}", t);
-
+#ifdef STATIC_HAL
     LightHAL* lightHal = new LightHAL;
 
     ShouseResourceServer lightServer("/a/light", "type", "iface");
     if (!lightServer.createResource(lightHal)) {
         Log::error(LOG_TAG, "Error creating resource");
     }
+#else
+    // Use HAL from shared library
 
+    ShouseServerHALdll* dllLightHal = new ShouseServerHALdll;
+    const char* HAL_path = "/home/olegartys/src/iotivity/resource/shouse/apps/hal_test/libHAL_light.so";
+    if (!dllLightHal->init(HAL_path)) {
+        Log::error(LOG_TAG, "Error loading DLL hal from {}", HAL_path);
+        return -1;
+    }
+
+    ShouseResourceServer lightServerDll("/a/light", "type", "iface");
+    if (!lightServerDll.createResource(dllLightHal)) {
+        Log::error(LOG_TAG, "Error creating resource from DLL");
+    }
+#endif
 
     // Start listen
     Log::info(LOG_TAG, "Listening...");

@@ -3,6 +3,10 @@
 
 #include <shouse/base_resource.h>
 
+/* TODO: add concept check whether ResourceType is child class for base 
+ * resource.
+ */
+
 template <typename ResourceType>
 class BaseResourceServer {
 public:

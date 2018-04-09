@@ -53,49 +53,6 @@ namespace PH = std::placeholders;
 
 static const char* LOG_TAG = "my_simpleclient";
 
-class LightHAL : public ShouseClientHAL {
-public:
-    virtual void onGet(const OC::HeaderOptions&,
-        const std::map<std::string, ResourceProperty>& props, const int eCode) override {
-        Log::info(LOG_TAG, "GET returned to client: {}", eCode);
-
-        // Do something with new data
-        // Update UI, or something else
-
-        Log::debug(LOG_TAG, "Properties of /a/light: ");
-        for (const auto& prop: props) {
-            auto p = prop.second;
-            Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
-                p.mName, propertyTypeToStr(p.mType), p.mValue);
-        }
-    }
-
-    virtual void onPut(const OC::HeaderOptions&,
-        const std::map<std::string, ResourceProperty>& props, const int eCode) override {
-        Log::info(LOG_TAG, "PUT returned to client: {}", eCode);
-
-        // Do something with new data
-        // Update UI, or something else
-
-        Log::debug(LOG_TAG, "Properties of /a/light: ");
-        for (const auto& prop: props) {
-            auto p = prop.second;
-            Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
-                p.mName, propertyTypeToStr(p.mType), p.mValue);
-        }
-    }
-
-    virtual std::vector<ResourceProperty> getProperties() const override {
-        ResourceProperty prop;
-        prop.mName = "lightness";
-        prop.mType = ResourceProperty::Type::T_STRING;
-        prop.mValue = "2";
-
-        std::vector<ResourceProperty> vec{prop};
-        return vec;
-    }
-
-};
 
 class ResourceHolder {
 public:
@@ -161,41 +118,51 @@ private:
 ResourceHolder gResourceHolder;
 
 
-void onFoundResource(std::shared_ptr<OCResource> resource) {
+static void onFoundResource(std::shared_ptr<OCResource> resource) {
     Log::debug(LOG_TAG, "{}: resource found {}", __FUNCTION__, resource->uri());
 
     if (resource->uri() == "/a/light") {
-        ShouseClientHAL *hal = new LightHAL;
         ShouseResourceClient* lightClient =
-            new ShouseResourceClient("/a/light", "t", "iface", hal);
+            new ShouseResourceClient("/a/light", "t", "iface");
         lightClient->setOCResource(resource);
 
         gResourceHolder.addResource(resource->uri(), lightClient);
-
-        // QueryParamsMap test;
-        // lightClient->get(test);
-
-        // sleep(1);
-
-        // Log::debug(LOG_TAG, "Properties of /a/light: ");
-        // for (const auto& prop: lightClient->properties()) {
-        //     auto p = prop.second;
-        //     Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
-        //         p.mName, propertyTypeToStr(p.mType), p.mValue);
-        // }
-        // auto state = lightClient->repr().getValue<std::string>("lightness");
-
-        // Log::debug(LOG_TAG, "Current lightness: {}", state);
-
-        // state++;
-        // lightClient->repr().setValue("state", state);
-
-        // lightClient->put(test);
     }
 }
 
-void onFoundResourceError(const std::string& err, const int err_t) {
+static void onFoundResourceError(const std::string& err, const int err_t) {
     Log::error(LOG_TAG, "{}: error {}, {}", __FUNCTION__, err, err_t);
+}
+
+
+static void onGet(const OC::HeaderOptions&,
+    const std::map<std::string, ResourceProperty>& props, const int eCode) {
+    Log::info(LOG_TAG, "GET returned to client: {}", eCode);
+
+    // Do something with new data
+    // Update UI, or something else
+
+    Log::debug(LOG_TAG, "Properties of /a/light: ");
+    for (const auto& prop: props) {
+        auto p = prop.second;
+        Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+            p.mName, propertyTypeToStr(p.mType), p.mValue);
+    }
+}
+
+static void onPut(const OC::HeaderOptions&,
+    const std::map<std::string, ResourceProperty>& props, const int eCode) {
+    Log::info(LOG_TAG, "PUT returned to client: {}", eCode);
+
+    // Do something with new data
+    // Update UI, or something else
+
+    Log::debug(LOG_TAG, "Properties of /a/light: ");
+    for (const auto& prop: props) {
+        auto p = prop.second;
+        Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+            p.mName, propertyTypeToStr(p.mType), p.mValue);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -213,18 +180,18 @@ int main(int argc, char** argv) {
 
     auto lightResource = gResourceHolder.getResourceSync("/a/light");
 
-    lightResource->get();
+    lightResource->get(onGet);
 
     sleep(1);
 
     lightResource->setProp("lightness", "5");
     lightResource->setProp("state", "1");
     lightResource->setProp("some_param", "pararam");
-    lightResource->put();
+    lightResource->put(onPut);
 
     sleep(1);
 
-    lightResource->get();
+    lightResource->get(onGet);
 
     // A condition variable will free the mutex it is given, then do a non-
     // intensive block until 'notify' is called on it.  In this case, since we

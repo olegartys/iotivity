@@ -7,39 +7,42 @@
 using namespace OC;
 using namespace std::placeholders;
 
-OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParametersMap) {
+OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParametersMap,
+	BaseResourceClient::onGetCb onGetHandler) {
 	OCStackResult ret;
 
-	auto onGet = std::bind(&ShouseResourceClient::onGet, this, _1, _2, _3);
+	auto onGet = std::bind(&ShouseResourceClient::onGet, this, onGetHandler,
+		_1, _2, _3);
 
 	ret = mOCResource->get(queryParametersMap, onGet);
 
 	return ret; 
 }
 
-OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap) {
+OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap,
+	BaseResourceClient::onGetCb onPutHandler) {
 	OCStackResult ret;
 
-	auto onPut = std::bind(&ShouseResourceClient::onPut, this, _1, _2, _3);
-
-	auto values = mResource->repr().getValues();
-	for (auto& val: values) {
-		Log::error(LOG_TAG, "Sending val: {}", val.first);
-	}
+	auto onPut = std::bind(&ShouseResourceClient::onPut, this, onPutHandler,
+		_1, _2, _3);
 
 	ret = mOCResource->put(mResource->repr(), queryParametersMap, onPut);
 
 	return ret;
 }
 
-void ShouseResourceClient::onGet(const OC::HeaderOptions& opts, const OC::OCRepresentation& rep, const int eCode) {
+void ShouseResourceClient::onGet(BaseResourceClient::onGetCb onGetHandler,
+	const OC::HeaderOptions& opts,
+	const OC::OCRepresentation& rep, const int eCode) {
 	updateRepr(rep);
-	mHal->onGet(opts, mPropertiesMap, eCode);
+	onGetHandler(opts, mPropertiesMap, eCode);
 }	
 
-void ShouseResourceClient::onPut(const OC::HeaderOptions& opts, const OC::OCRepresentation& rep, const int eCode) {
+void ShouseResourceClient::onPut(BaseResourceClient::onPutCb onPutHandler,
+	const OC::HeaderOptions& opts,
+	const OC::OCRepresentation& rep, const int eCode) {
 	updateRepr(rep);
-	mHal->onPut(opts, mPropertiesMap, eCode);
+	onPutHandler(opts, mPropertiesMap, eCode);
 }
 
 void ShouseResourceClient::updateRepr(const OC::OCRepresentation& rep) {

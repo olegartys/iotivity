@@ -43,15 +43,4 @@ public:
 
 };
 
-
-class ShouseClientHAL {
-public:
-	virtual void onGet(const OC::HeaderOptions&, const std::map<std::string, ResourceProperty>& props, const int eCode) = 0;
-
-    virtual void onPut(const OC::HeaderOptions&, const std::map<std::string, ResourceProperty>& props, const int eCode) = 0;
-
-	virtual std::vector<ResourceProperty> getProperties() const = 0;
-
-};
-
 #endif // SHOUSE_RES_HAL_H

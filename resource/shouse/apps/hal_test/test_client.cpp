@@ -34,6 +34,7 @@
 #include <map>
 #include <cstdlib>
 #include <mutex>
+#include <thread>
 #include <condition_variable>
 
 #include "OCPlatform.h"
@@ -54,25 +55,41 @@ static const char* LOG_TAG = "my_simpleclient";
 
 class LightHAL : public ShouseClientHAL {
 public:
-    virtual void onGet(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) override {
-        Log::info(LOG_TAG, "GET returned to client: {}", rep.getValue<std::string>("lightness"));
+    virtual void onGet(const OC::HeaderOptions&,
+        const std::map<std::string, ResourceProperty>& props, const int eCode) override {
+        Log::info(LOG_TAG, "GET returned to client: {}", eCode);
 
         // Do something with new data
         // Update UI, or something else
+
+        Log::debug(LOG_TAG, "Properties of /a/light: ");
+        for (const auto& prop: props) {
+            auto p = prop.second;
+            Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+                p.mName, propertyTypeToStr(p.mType), p.mValue);
+        }
     }
 
-    virtual void onPut(const OC::HeaderOptions&, const OC::OCRepresentation& rep, const int eCode) override {
-        Log::info(LOG_TAG, "PUT returned to client");
+    virtual void onPut(const OC::HeaderOptions&,
+        const std::map<std::string, ResourceProperty>& props, const int eCode) override {
+        Log::info(LOG_TAG, "PUT returned to client: {}", eCode);
 
         // Do something with new data
         // Update UI, or something else
+
+        Log::debug(LOG_TAG, "Properties of /a/light: ");
+        for (const auto& prop: props) {
+            auto p = prop.second;
+            Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+                p.mName, propertyTypeToStr(p.mType), p.mValue);
+        }
     }
 
     virtual std::vector<ResourceProperty> getProperties() const override {
         ResourceProperty prop;
         prop.mName = "lightness";
         prop.mType = ResourceProperty::Type::T_STRING;
-        prop.mDefaultValue = "2";
+        prop.mValue = "2";
 
         std::vector<ResourceProperty> vec{prop};
         return vec;
@@ -80,24 +97,95 @@ public:
 
 };
 
-ShouseResourceClient *lightClient;
+class ResourceHolder {
+public:
+    void addResource(const std::string& uri,
+        ShouseResourceClient* resource) {
+        std::lock_guard<std::mutex> lock(mLock);
+
+        // Add new resource as a shared pointer. We will always hold one,
+        // so the objects will never be destructed and lost
+
+        mResources[uri] =
+            std::move(std::shared_ptr<ShouseResourceClient>(resource));
+
+        // Notify getResource that new resource with uri = mRecentUriAdded
+        // has been added
+
+        mRecentUriAdded = uri;
+        mResourceWaitCv.notify_all();
+
+        Log::info(LOG_TAG, "Resource uri = {} added", uri);
+    }
+
+    std::shared_ptr<ShouseResourceClient> getResourceSync(const std::string& uri) {
+        
+        // Check whether resource with given uri already stored
+
+        {
+            std::lock_guard<std::mutex> lock(mLock);
+            if (mResources.find(uri) != mResources.end()) {
+                // Alright, resource found -> just return pointer
+
+                return mResources[uri];
+            }
+        }
+        
+        // Otherwise, lets wait for the needed resource to be added
+
+        std::unique_lock<std::mutex> lock(mLock);
+        mResourceWaitCv.wait(lock, [this, &uri] {
+            return mRecentUriAdded == uri;
+        });
+
+        return mResources[uri]; 
+    }
+
+    const std::map<std::string, std::shared_ptr<ShouseResourceClient>>& getResources() {
+        std::lock_guard<std::mutex> lock(mLock);
+        return mResources;
+    }
+
+private:
+    static constexpr const char* LOG_TAG = "ResourceHolder";
+
+    std::map<std::string, std::shared_ptr<ShouseResourceClient>> mResources;
+    std::mutex mLock;
+
+    std::condition_variable mResourceWaitCv;
+
+    std::string mRecentUriAdded;
+
+};
+
+ResourceHolder gResourceHolder;
+
 
 void onFoundResource(std::shared_ptr<OCResource> resource) {
     Log::debug(LOG_TAG, "{}: resource found {}", __FUNCTION__, resource->uri());
 
     if (resource->uri() == "/a/light") {
         ShouseClientHAL *hal = new LightHAL;
-        lightClient = new ShouseResourceClient("/a/light", "t", "iface", hal);
+        ShouseResourceClient* lightClient =
+            new ShouseResourceClient("/a/light", "t", "iface", hal);
         lightClient->setOCResource(resource);
 
-        QueryParamsMap test;
-        lightClient->get(test);
+        gResourceHolder.addResource(resource->uri(), lightClient);
 
-        sleep(1);
+        // QueryParamsMap test;
+        // lightClient->get(test);
 
-        auto state = lightClient->repr().getValue<std::string>("lightness");
+        // sleep(1);
 
-        Log::debug(LOG_TAG, "Current lightness: {}", state);
+        // Log::debug(LOG_TAG, "Properties of /a/light: ");
+        // for (const auto& prop: lightClient->properties()) {
+        //     auto p = prop.second;
+        //     Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+        //         p.mName, propertyTypeToStr(p.mType), p.mValue);
+        // }
+        // auto state = lightClient->repr().getValue<std::string>("lightness");
+
+        // Log::debug(LOG_TAG, "Current lightness: {}", state);
 
         // state++;
         // lightClient->repr().setValue("state", state);
@@ -120,6 +208,23 @@ int main(int argc, char** argv) {
 
     OCPlatform::findResource("", requestURI.str(), CT_DEFAULT, onFoundResource,
                              onFoundResourceError);
+
+    // Wait for the /a/light to be added
+
+    auto lightResource = gResourceHolder.getResourceSync("/a/light");
+
+    lightResource->get();
+
+    sleep(1);
+
+    lightResource->setProp("lightness", "5");
+    lightResource->setProp("state", "1");
+    lightResource->setProp("some_param", "pararam");
+    lightResource->put();
+
+    sleep(1);
+
+    lightResource->get();
 
     // A condition variable will free the mutex it is given, then do a non-
     // intensive block until 'notify' is called on it.  In this case, since we

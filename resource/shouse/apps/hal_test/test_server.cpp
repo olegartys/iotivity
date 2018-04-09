@@ -105,7 +105,7 @@ public:
         ResourceProperty prop;
         prop.mName = "lightness";
         prop.mType = ResourceProperty::Type::T_STRING;
-        prop.mDefaultValue = "2";
+        prop.mValue = "2";
 
         std::vector<ResourceProperty> vec{prop};
         return vec;

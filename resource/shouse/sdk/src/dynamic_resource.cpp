@@ -43,28 +43,52 @@ bool DynamicDataResource::init(const std::string& resourcePropertiesJsonStr) {
     return true;
 }
 
-bool DynamicDataResource::fillRepr(const ResourceProperty& resourceProperty) {
-    switch (resourceProperty.mType) {
-        case ResourceProperty::Type::T_STRING:
-            repr().setValue(resourceProperty.mName, resourceProperty.mDefaultValue);
-            break;
+bool DynamicDataResource::setProp(const ResourceProperty& prop, const std::string& newValue) {
+    ResourceProperty newProp;
 
-        case ResourceProperty::Type::T_INT: {
-            int val;
+    // Create local copy of the given property and change its value to new
 
-            try {
-                val = stoi(resourceProperty.mDefaultValue);
-            } catch (std::exception&) {
-                return false;
-            }
+    newProp = prop;
+    newProp.mValue = newValue;
 
-            repr().setValue(resourceProperty.mName, val);
-            break;
-        }
+    // Insert property with new value into the OCRepresentation
 
-        default:
-            break;
+    return fillRepr(newProp);
+}
+
+bool DynamicDataResource::getProp(ResourceProperty& outProp, const std::string& propName) const {
+    std::string val;
+    ResourceProperty prop;
+
+    if (!repr().getValue(propName, val)) {
+        Log::error(LOG_TAG, "Error getting property {}", propName);
+        return false;
     }
+
+    if (!prop.fromJson(val)) {
+        Log::error(LOG_TAG, "Error construction json property string into"
+            "ResourceProperty");
+        return false;
+    }
+
+    outProp = std::move(prop);
+
+    return true;
+}
+
+bool DynamicDataResource::fillRepr(const ResourceProperty& resourceProperty) {
+    std::string jsonProp;
+
+    // Convert property to JSON string
+
+    if (!resourceProperty.toJson(jsonProp)) {
+        return false;
+    }
+
+    // Store it into the OCRepresentation object as [name]->jsonPropertyRepr
+    // pair
+
+    repr().setValue(resourceProperty.mName, jsonProp);
 
     return true;
 }

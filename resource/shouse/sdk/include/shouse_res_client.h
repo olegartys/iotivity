@@ -16,6 +16,33 @@ public:
 
     virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap) override;
 
+    OCStackResult get() {
+    	OC::QueryParamsMap queryParametersMap;
+    	return get(queryParametersMap);
+    }
+
+    OCStackResult put() {
+    	OC::QueryParamsMap queryParametersMap;
+    	return put(queryParametersMap);
+    }
+
+    bool setProp(const std::string& name, const std::string& value) {
+    	auto curProp = mPropertiesMap[name];
+
+    	// Update resource representation and internal map of props
+
+    	auto ret = mResource->setProp(curProp, value);
+    	if (ret) {
+		    mPropertiesMap[name] = curProp;    		
+    	}
+
+    	return ret;
+    }
+
+    const std::map<std::string, ResourceProperty>& properties() const {
+    	return mPropertiesMap;
+    }
+
 protected:
 	ShouseClientHAL* mHal;
 
@@ -25,6 +52,10 @@ protected:
 
 private:
 	static constexpr const char* LOG_TAG = "ShouseResourceClient"; 
+
+	void updateRepr(const OC::OCRepresentation& rep);
+
+	std::map<std::string, ResourceProperty> mPropertiesMap;
 
 };
 

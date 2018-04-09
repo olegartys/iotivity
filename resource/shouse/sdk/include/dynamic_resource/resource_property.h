@@ -12,16 +12,20 @@ struct ResourceProperty final {
 
 	ResourceProperty() = default;
 
-    ResourceProperty(const std::string& name, Type type, const std::string& defaultValue) noexcept :
-    	mName(name), mType(type), mDefaultValue(defaultValue) { }
+    ResourceProperty(const std::string& name, Type type, const std::string& value) noexcept :
+    	mName(name), mType(type), mValue(value) { }
 
     bool fromJson(const std::string& jsonString);
 	bool fromJson(const cJSON* json);
 
+    bool toJson(std::string& out) const;
+
     std::string mName;
     Type 		mType;
-    std::string mDefaultValue;
+    std::string mValue;
 
 };
+
+const char* propertyTypeToStr(const ResourceProperty::Type type);
 
 #endif // RESOURCE_PROPERTY_H

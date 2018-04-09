@@ -14,6 +14,18 @@ static ResourceProperty::Type strToPropertyType(const char *str) {
 	}
 }
 
+const char* propertyTypeToStr(const ResourceProperty::Type type) {
+	switch(type) {
+	case ResourceProperty::Type::T_STRING:
+		return "string";
+	case ResourceProperty::Type::T_INT:
+		return "int";
+	case ResourceProperty::Type::T_UNKNOWN:
+	default:
+		return nullptr;
+	}
+}
+
 bool ResourceProperty::fromJson(const std::string& jsonString) {
 	const char *c_jsonString;
 	cJSON *jsonObj;
@@ -31,7 +43,7 @@ bool ResourceProperty::fromJson(const std::string& jsonString) {
 bool ResourceProperty::fromJson(const cJSON* json) {
 	const cJSON *name;
 	const cJSON *type;
-	const cJSON *defaultValue;
+	const cJSON *value;
 
 	name = cJSON_GetObjectItemCaseSensitive(json, "name");
 	if (!name) {
@@ -43,14 +55,60 @@ bool ResourceProperty::fromJson(const cJSON* json) {
 		return false;
 	}
 
-	defaultValue = cJSON_GetObjectItemCaseSensitive(json, "default_value");
-	if (!defaultValue) {
+	value = cJSON_GetObjectItemCaseSensitive(json, "value");
+	if (!value) {
 		return false;
 	}
 
 	mName = name->valuestring;
 	mType = strToPropertyType(type->valuestring);
-	mDefaultValue = defaultValue->valuestring;
+	mValue = value->valuestring;
+
+	return true;
+}
+
+bool ResourceProperty::toJson(std::string& out) const {
+	cJSON *res_prop;
+	cJSON *name;
+	cJSON *type;
+	cJSON *value;
+
+	char* str = nullptr;
+
+	res_prop = cJSON_CreateObject();
+	if (!res_prop) {
+		return false;
+	}
+
+	name = cJSON_CreateString(mName.c_str());
+	if (!name) {
+		cJSON_Delete(res_prop);
+		return false;
+	}
+
+	type = cJSON_CreateString(propertyTypeToStr(mType));
+	if (!type) {
+		cJSON_Delete(res_prop);
+		return false;
+	}
+
+	value = cJSON_CreateString(mValue.c_str());
+	if (!value) {
+		cJSON_Delete(res_prop);
+		return false;
+	}
+
+	cJSON_AddItemToObject(res_prop, "name", name);	
+	cJSON_AddItemToObject(res_prop, "type", type);
+	cJSON_AddItemToObject(res_prop, "value", value);
+
+	str = cJSON_Print(res_prop);
+	if (!str) {
+		cJSON_Delete(res_prop);
+		return false;
+	}
+
+	out = str;
 
 	return true;
 }

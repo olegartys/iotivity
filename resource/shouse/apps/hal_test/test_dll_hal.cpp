@@ -14,9 +14,14 @@
 extern "C" {
 	static constexpr const char* LOG_TAG = "LightHalDll";
 
-	static int mState;
+	static int gState;
+    static int gLightness;
+    static std::string gSomeParam;
 
 	int HAL_open() {
+        gState = 0;
+        gLightness = 0;
+        gSomeParam = "hello";
 		return 0;
 	}
 
@@ -27,10 +32,14 @@ extern "C" {
     ShouseHALResult HAL_get(int id, const std::string& propName, std::string& resultValue, const OC::QueryParamsMap& params) {
         ShouseHALResult ret = ShouseHALResult::OK;
 
+        Log::info(LOG_TAG, "Get something: {}", propName); 
+
         if (propName == "lightness") {
-            Log::info(LOG_TAG, "Get something: {}", propName); 
-            mState++;
-            resultValue = std::to_string(mState);
+            resultValue = std::to_string(gLightness);
+        } else if (propName == "state") {
+            resultValue = std::to_string(gState);
+        } else if (propName == "some_param") {
+            resultValue = gSomeParam;
         } else {
             ret = ShouseHALResult::ERR;
         }
@@ -41,21 +50,39 @@ extern "C" {
     ShouseHALResult HAL_put(int id, const std::string& propName, const std::string& newValue, const OC::QueryParamsMap& params) {
         ShouseHALResult ret = ShouseHALResult::OK;
 
-        //curRepr.getValue("state", mState);
-        Log::info(LOG_TAG, "Put something: {}", mState);
+        Log::info(LOG_TAG, "Put something: {}, {}", propName, newValue);
+
+        if (propName == "lightness") {
+            gLightness = std::stoi(newValue);
+        } else if (propName == "state") {
+            gState = std::stoi(newValue);
+        } else if (propName == "some_param") {
+            gSomeParam = newValue;
+        } else {
+            ret = ShouseHALResult::ERR;
+        }
 
         return ret;        
     }
 
     std::vector<ResourceProperty> HAL_properties() {
-        // std::string props = "{ \"name\": \"lightness\", \"type\": \"string\", \"default_value\": \"2\"}";
-
         ResourceProperty prop;
-        prop.mName = "lightness";
-        prop.mType = ResourceProperty::Type::T_STRING;
-        prop.mDefaultValue = "2";
+        ResourceProperty prop1;
+        ResourceProperty prop2;
 
-        std::vector<ResourceProperty> vec{prop};
+        prop.mName = "state";
+        prop.mType = ResourceProperty::Type::T_INT;
+        prop.mValue = std::to_string(gState);
+
+        prop1.mName = "lightness";
+        prop1.mType = ResourceProperty::Type::T_INT;
+        prop1.mValue = std::to_string(gLightness);
+
+        prop2.mName = "some_param";
+        prop2.mType = ResourceProperty::Type::T_STRING;
+        prop2.mValue = gSomeParam;
+
+        std::vector<ResourceProperty> vec{prop, prop1, prop2};
         return vec;
     }	
 }

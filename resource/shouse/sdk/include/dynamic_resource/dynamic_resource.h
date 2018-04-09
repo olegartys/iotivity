@@ -26,6 +26,10 @@ public:
         return true;
     }
 
+    bool setProp(const ResourceProperty& prop, const std::string& newValue);
+
+    bool getProp(ResourceProperty& outProp, const std::string& propName) const;
+
 protected:
     bool fillRepr(const ResourceProperty& rp);
 

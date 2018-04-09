@@ -106,8 +106,8 @@ bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
             return false;
         }
 
-        // Update the representation with the new value
-        repr().setValue(prop.mName, propValue);                 
+        // Update the resource data with the new value
+        mResource->setProp(prop, propValue);
     }
 
     return true;
@@ -119,21 +119,43 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
     for (const auto& prop: mHal->properties()) {
         // Request property from HAL
         std::string newValue;
+
         bool ret = clientRepresentation.getValue(prop.mName, newValue);
         if (!ret) {
             Log::error(LOG_TAG, "Error getting value {} from OCRepr", prop.mName);
             break;
         }
 
-        halRet = mHal->put(mId, prop.mName, newValue, params);
+        // Parse received value into ResourceProperty object
 
+        ResourceProperty parsedProp;
+        ret = parsedProp.fromJson(newValue);
+        if (!ret) {
+            Log::error(LOG_TAG, "Error parsing property {} value {} to "
+                "ResourceProperty", prop.mName, newValue);
+            break;
+        }
+
+        // If the key in OCRepresentation for the property is not equal
+        // to the name in its JSON representation - something wrong has 
+        // happened.
+
+        if (parsedProp.mName != prop.mName) {
+            Log::error(LOG_TAG, "parsedProp.mName != prop.mName O_o: "
+                "{} != {}", parsedProp.mName, prop.mName);
+            break;
+        }
+
+        // Send update request to the HAL
+
+        halRet = mHal->put(mId, parsedProp.mName, parsedProp.mValue, params);
         if (halRet != ShouseHALResult::OK) {
             Log::error(LOG_TAG, "HAL failed to set {}", prop.mName);
             return false;
         }
 
         // Update the representation with the new value
-        repr().setValue(prop.mName, newValue);
+        mResource->setProp(prop, newValue);
     }
 
     return true;

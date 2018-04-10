@@ -24,10 +24,10 @@ public:
     inline OC::OCRepresentation& repr() { return mResource->repr(); }
 
     virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap,
-        onGetCb onGetHandler) = 0;
+        onGetCb onGetHandler, bool async) = 0;
 
     virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap,
-        onPutCb onPutHandler) = 0;
+        onPutCb onPutHandler, bool async) = 0;
 
 protected:
     template <typename... Args>

@@ -182,14 +182,10 @@ int main(int argc, char** argv) {
 
     lightResource->get(onGet);
 
-    sleep(1);
-
     lightResource->setProp("lightness", "5");
     lightResource->setProp("state", "1");
     lightResource->setProp("some_param", "pararam");
     lightResource->put(onPut);
-
-    sleep(1);
 
     lightResource->get(onGet);
 

@@ -48,6 +48,11 @@
 #include <shouse/Log.h>
 #include <shouse_default_platform.h>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
+
+#include "base64.h"
+
 using namespace OC;
 namespace PH = std::placeholders;
 
@@ -127,6 +132,12 @@ static void onFoundResource(std::shared_ptr<OCResource> resource) {
         lightClient->setOCResource(resource);
 
         gResourceHolder.addResource(resource->uri(), lightClient);
+    } else if (resource->uri() == "/a/camera") {
+        ShouseResourceClient* cameraClient = 
+            new ShouseResourceClient("/a/camera", "t", "iface");
+        cameraClient->setOCResource(resource);
+
+        gResourceHolder.addResource(resource->uri(), cameraClient);
     }
 }
 
@@ -177,6 +188,48 @@ static void onObserve(const OC::HeaderOptions&,
     }
 }
 
+/**** CAMERA ROUTINES *****/
+static const std::shared_ptr<uint8_t> decodeBase64(const std::string& base64str,
+    size_t& outSize) {
+    // Get the size of output buffer
+    size_t outBufFakeSize = 0;
+    size_t outBufRealSize = 0;
+    int ret = b64Decode(base64str.c_str(), base64str.length(),
+        (uint8_t*)base64str.c_str(), (size_t)outBufFakeSize, &outBufRealSize);
+    if (ret != B64_OUTPUT_BUFFER_TOO_SMALL) {
+        Log::error(LOG_TAG, "{}: Geting output buffer size failed: {}", __FUNCTION__, ret);
+        return nullptr;
+    }
+
+    Log::debug(LOG_TAG, "Decode buffer size: {}", outBufRealSize);
+
+    // Decode buffer
+    std::shared_ptr<uint8_t> outBuf(new uint8_t[outBufRealSize]);
+    ret = b64Decode(base64str.c_str(), base64str.length(), outBuf.get(), (size_t)outBufRealSize, &outBufRealSize);
+    if (ret != B64_OK) {
+        Log::error(LOG_TAG, "Decode64 failed {}", ret);
+        return nullptr;
+    }
+
+    outSize = outBufRealSize;
+
+    return outBuf;
+}
+
+static void displayFrame(const OC::HeaderOptions&,
+    const std::map<std::string, ResourceProperty>& props, const int eCode) {
+    size_t outSize{};
+
+    auto decodeFrame = decodeBase64(props.at("frame").mValue, outSize);
+    cv::_InputArray arr(decodeFrame.get(), (int)outSize);
+
+    cv::Mat imgMat = cv::imdecode(arr, CV_LOAD_IMAGE_COLOR);
+    cv::imshow("kek", imgMat);
+    cv::waitKey(20);
+}
+
+/***********/
+
 int main(int argc, char** argv) {
     ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_CLIENT>();
 
@@ -207,9 +260,22 @@ int main(int argc, char** argv) {
 
     lightResource->get(onGet);
 
-    sleep(5);
+    // sleep(5);
 
     lightResource->stopObserve();
+
+    // Wait for camera to be added
+
+    auto cameraResource = gResourceHolder.getResourceSync("/a/camera");
+    
+    /* It does not work */
+
+    // cameraResource->startObserve(onObserve);
+
+    while (1) {
+        cameraResource->get(onGet);
+        usleep(33 * 1000);
+    }
 
     // A condition variable will free the mutex it is given, then do a non-
     // intensive block until 'notify' is called on it.  In this case, since we

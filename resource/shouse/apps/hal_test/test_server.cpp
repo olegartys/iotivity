@@ -132,6 +132,8 @@ int main(int argc, char** argv) {
 #else
     // Use HAL from shared library
 
+    /* Create light resource */
+
     ShouseServerHALdll* dllLightHal = new ShouseServerHALdll;
     const char* HAL_path = "/home/olegartys/src/iotivity/resource/shouse/apps/hal_test/libHAL_light.so";
     if (!dllLightHal->init(HAL_path)) {
@@ -143,6 +145,21 @@ int main(int argc, char** argv) {
     if (!lightServerDll.createResource(dllLightHal)) {
         Log::error(LOG_TAG, "Error creating resource from DLL");
     }
+
+    /* Create video camera resource */
+
+    ShouseServerHALdll* dllCameraHal = new ShouseServerHALdll;
+    const char* HAL_path_camera = "/home/olegartys/src/iotivity/resource/shouse/apps/hal_test/libHAL_videocamera.so";
+    if (!dllCameraHal->init(HAL_path_camera)) {
+        Log::error(LOG_TAG, "Error loading DLL hal from {}", HAL_path_camera);
+        return -1;
+    }
+
+    ShouseResourceServer cameraServerDll("/a/camera", "type", "iface");
+    if (!cameraServerDll.createResource(dllCameraHal)) {
+        Log::error(LOG_TAG, "Error creating camera resource");
+    }
+
 #endif
 
     // Start listen

@@ -14,6 +14,9 @@ public:
     using onPutCb = std::function<void(const OC::HeaderOptions&,
         const std::map<std::string, ResourceProperty>& props, const int eCode)>;
 
+    using onObserveCb = std::function<void(const OC::HeaderOptions&,
+        const std::map<std::string, ResourceProperty>& props, const int eCode)>;
+
 public:
     virtual ~BaseResourceClient() = default;
 
@@ -24,10 +27,16 @@ public:
     inline OC::OCRepresentation& repr() { return mResource->repr(); }
 
     virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap,
-        onGetCb onGetHandler, bool async) = 0;
+        onGetCb onGetHandler) = 0;
 
     virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap,
-        onPutCb onPutHandler, bool async) = 0;
+        onPutCb onPutHandler) = 0;
+
+    virtual OCStackResult startObserve(
+        const OC::QueryParamsMap& queryParametersMap,
+        onObserveCb onObserveHandler) = 0;
+
+    virtual OCStackResult stopObserve() = 0;
 
 protected:
     template <typename... Args>

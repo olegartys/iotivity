@@ -1,5 +1,7 @@
 #include <vector>
 #include <string>
+#include <atomic>
+#include <functional>
 
 #include <OCPlatform.h>
 #include <OCApi.h>
@@ -15,7 +17,7 @@ extern "C" {
 	static constexpr const char* LOG_TAG = "LightHalDll";
 
 	static int gState;
-    static int gLightness;
+    static std::atomic_int gLightness;
     static std::string gSomeParam;
 
 	int HAL_open() {
@@ -63,6 +65,19 @@ extern "C" {
         }
 
         return ret;        
+    }
+
+    void HAL_observe(int id, const OC::QueryParamsMap& params,
+        std::atomic_bool& isThreadRunning,
+        std::function<void(int)> notifyChanges) {
+        int ret = 0;
+
+        while (isThreadRunning) {
+            gLightness++;
+            Log::debug(LOG_TAG, "OBSERVING: gLightness = {}", gLightness);
+            notifyChanges(ret);
+            sleep(1);
+        }
     }
 
     std::vector<ResourceProperty> HAL_properties() {

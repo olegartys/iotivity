@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <atomic>
 
 #include <OCPlatform.h>
 #include <OCApi.h>
@@ -30,6 +31,10 @@ public:
 	virtual ShouseHALResult put(int id, const std::string& propName,
 		const std::string& newValue, const OC::QueryParamsMap& params) = 0;
 
+	virtual void observe(int id, const OC::QueryParamsMap& params,
+		std::atomic_bool& isThreadRunning,
+		std::function<void(int)> notifyChanges) = 0;
+
 	virtual std::vector<ResourceProperty> properties() const = 0;
 
 public:
@@ -39,6 +44,8 @@ public:
 		const OC::QueryParamsMap&);
 	using put_t = ShouseHALResult(*)(int, const std::string&,
 		const std::string&, const OC::QueryParamsMap&);
+	using observe_t = void(*)(int, const OC::QueryParamsMap&,
+		std::atomic_bool&, std::function<void(int)>);
 	using properties_t = std::vector<ResourceProperty>(*)();
 
 };

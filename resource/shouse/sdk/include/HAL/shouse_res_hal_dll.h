@@ -64,6 +64,12 @@ public:
 		return mPutCb(id, propName, newValue, params);
 	}
 
+	void observe(int id, const OC::QueryParamsMap& params,
+		std::atomic_bool& isThreadRunning,
+		std::function<void(int)> notifyChanges) override {
+		return mObserverCb(id, params, isThreadRunning, notifyChanges);
+	}
+
 	std::vector<ResourceProperty> properties() const override {
 		return mPropertiesCb();
 	}
@@ -122,6 +128,13 @@ private:
 			return false;
 		}
 
+		mObserverCb = loadSymbol<observe_t>("HAL_observe");
+		if (!mObserverCb) {
+			if (!checkDllLoadErr("HAL_observe")) {
+				Log::error(LOG_TAG, "Error getting dlsym error! :(");
+			}
+		}
+
 		mPropertiesCb = loadSymbol<properties_t>("HAL_properties");
 		if (!mPropertiesCb) {
 			if (!checkDllLoadErr("HAL_properties")) {
@@ -141,24 +154,10 @@ private:
 	ShouseServerHAL::close_t mCloseCb;
 	ShouseServerHAL::get_t mGetCb;
 	ShouseServerHAL::put_t mPutCb;
+	ShouseServerHAL::observe_t mObserverCb;
 	ShouseServerHAL::properties_t mPropertiesCb;
 
 private:
 	static constexpr const char* LOG_TAG = "ShouseServerHALdll";
 
 };
-
-// class ShouseHalFactory final {
-// public:
-// 	static std::unique_ptr<ShouseServerHAL> create(const char* path);
-
-// };
-
-// std::unique_ptr<ShouseServerHAL> ShouseHalManager::create(const char* path) {
-// 	void* hndl = dlopen(path, RTLD_LAZY);
-// 	if (!hndl) {
-// 		return nullptr;
-// 	}
-
-
-// }

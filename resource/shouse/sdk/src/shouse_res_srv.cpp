@@ -31,7 +31,8 @@ bool ShouseResourceServer::createResource(ShouseServerHAL* hal) {
     // Make the resource visible over the network
     auto _uri = mResource->uri();
 
-    auto regResult = OCPlatform::registerResource(mResourceHandle, _uri, type(), iface(), cb, (uint8_t)(OC_DISCOVERABLE | OC_OBSERVABLE));
+    auto regResult = OCPlatform::registerResource(mResourceHandle, _uri, type(),
+        iface(), cb, (uint8_t)(OC_DISCOVERABLE | OC_OBSERVABLE));
 
     return regResult == OC_STACK_OK;
 }
@@ -65,7 +66,10 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OCReso
     	auto clientRepresentation = request->getResourceRepresentation();
         auto queryParams = request->getQueryParameters();
 
-        // TODO: research Observe flag
+        /* Client has made request - so here we are.
+         * Let HAL do all the 'get' and 'put' job.
+         */
+
         if (requestFlag & RequestHandlerFlag::RequestFlag) {
             if (requestType == "GET") {
                 Log::info(LOG_TAG, "{}: GET for the {}", __FUNCTION__, mResource->uri());
@@ -82,19 +86,103 @@ OCEntityHandlerResult ShouseResourceServer::entityHandler(std::shared_ptr<OCReso
 
                 ret = OC_EH_METHOD_NOT_ALLOWED;
             }
+
+            response->setResponseResult(ret);
+            response->setResourceRepresentation(mResource->repr());
+
+            sendResponse(response);
         }
 
-        response->setResponseResult(ret);
-        response->setResourceRepresentation(mResource->repr());
+        /* Client requested to observe the resource.
+         *
+         */
 
-        sendResponse(response);
+        if (requestFlag & RequestHandlerFlag::ObserverFlag) {
+
+            /* Check what is the intention of observe request - whether
+             * to subscribe to the resource or to unsubscribe from it.
+             */
+
+            ObservationInfo observationInfo = request->getObservationInfo();
+            if (observationInfo.action == ObserveAction::ObserveRegister) {
+                if (!mObserverThreadStarted) {
+                    startObserverThread(queryParams);
+                }
+
+                mObserverList.push_back(observationInfo.obsId);
+
+            } else if (observationInfo.action == ObserveAction::ObserveUnregister) {
+                mObserverList.erase(
+                    std::remove(mObserverList.begin(), mObserverList.end(),
+                        observationInfo.obsId),
+                    mObserverList.end()
+                );
+
+                if (mObserverThreadStarted && mObserverList.empty()) {
+                    stopObserverThread();
+                }
+            } else {
+
+                Log::error(LOG_TAG, "Unsupperted observer action");
+
+ 
+                ret = OC_EH_METHOD_NOT_ALLOWED;
+            }
+        }
+
+        // TODO: Do we need to send response from here?
     }
 
     return ret;
 }
 
+void ShouseResourceServer::startObserverThread(const QueryParamsMap& params) {
+    mObserverThreadStarted = true;
+    mObserverThread = std::thread([this, params]
+        { handleObserve(params); }
+    );
+    mObserverThread.detach();
+}
+
+void ShouseResourceServer::stopObserverThread() {
+    Log::info(LOG_TAG, "Observers list is empty, stopping thread");
+    mObserverThreadStarted = false;
+}
+
+void ShouseResourceServer::notifyObservers(int halRet) {
+    auto response = std::make_shared<OCResourceResponse>();
+    OCEntityHandlerResult ret = OC_EH_OK;
+
+    acquireResource();
+
+    bool getResult = handleGET(QueryParamsMap());
+    if (!getResult) {
+        Log::error(LOG_TAG, "{}: Error getting resource data from HAL",
+            __FUNCTION__);
+        ret = OC_EH_ERROR;
+    }
+
+    response->setResponseResult(ret);
+    response->setResourceRepresentation(mResource->repr());
+
+    releaseResource();
+
+    auto result = OCPlatform::notifyListOfObservers(hndl(), mObserverList,
+        response);
+    if (result == OC_STACK_NO_OBSERVERS) {
+        Log::warn(LOG_TAG, "No more observers exists");
+    }
+}
+
+void ShouseResourceServer::handleObserve(const QueryParamsMap& params) {
+    std::function<void(int)> f = [this](int ret) { notifyObservers(ret); };
+    mHal->observe(mId, params, mObserverThreadStarted, f);
+}
+
 bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
     ShouseHALResult halRet;
+
+    acquireResource();
 
     for (const auto& prop: mHal->properties()) {
         // Request property from HAL
@@ -103,6 +191,7 @@ bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
 
         if (halRet != ShouseHALResult::OK) {
             Log::error(LOG_TAG, "HAL failed to get {}", prop.mName);
+            releaseResource();
             return false;
         }
 
@@ -110,11 +199,16 @@ bool ShouseResourceServer::handleGET(const QueryParamsMap& params) {
         mResource->setProp(prop, propValue);
     }
 
+    releaseResource();
+
     return true;
 }
 
-bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentation, const QueryParamsMap& params) {
+bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentation,
+    const QueryParamsMap& params) {
     ShouseHALResult halRet = ShouseHALResult::ERR;
+
+    acquireResource();
 
     for (const auto& prop: mHal->properties()) {
         // Request property from HAL
@@ -151,12 +245,15 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
         halRet = mHal->put(mId, parsedProp.mName, parsedProp.mValue, params);
         if (halRet != ShouseHALResult::OK) {
             Log::error(LOG_TAG, "HAL failed to set {}", prop.mName);
+            releaseResource();
             return false;
         }
 
         // Update the representation with the new value
         mResource->setProp(prop, newValue);
     }
+
+    releaseResource();
 
     return true;
 }

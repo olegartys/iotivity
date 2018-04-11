@@ -5,6 +5,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <shouse/Log.h>
+
 #include <HAL/shouse_res_hal.h>
 
 #include <shouse/base_resource_client.h>
@@ -14,23 +16,34 @@
 class ShouseResourceClient : public BaseResourceClient<DynamicDataResource> {
 public:
 	ShouseResourceClient(const std::string& uri, const std::string& type,
-		const std::string& iface) :
-		BaseResourceClient(uri, type, iface) {}
+		const std::string& iface, bool async = false) :
+		BaseResourceClient(uri, type, iface), mIsAsync(async) {}
 
 	virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap,
-		onGetCb onGet, bool async) override;
+		onGetCb onGet) override;
 
     virtual OCStackResult put(const OC::QueryParamsMap& queryParametersMap,
-    	onPutCb onPut, bool async) override;
+    	onPutCb onPut) override;
 
-    OCStackResult get(onGetCb onGet = nullptr, bool async = false) {
+    virtual OCStackResult startObserve(
+    	const OC::QueryParamsMap& queryParametersMap,
+    	onObserveCb onObserve) override;
+
+    virtual OCStackResult stopObserve() override;
+
+    OCStackResult get(onGetCb onGet = nullptr) {
     	OC::QueryParamsMap queryParametersMap;
-    	return get(queryParametersMap, onGet, async);
+    	return get(queryParametersMap, onGet);
     }
 
-    OCStackResult put(onPutCb onPut = nullptr, bool async = false) {
+    OCStackResult put(onPutCb onPut = nullptr) {
     	OC::QueryParamsMap queryParametersMap;
-    	return put(queryParametersMap, onPut, async);
+    	return put(queryParametersMap, onPut);
+    }
+
+    OCStackResult startObserve(onObserveCb onObserve = nullptr) {
+    	OC::QueryParamsMap queryParametersMap;
+    	return startObserve(queryParametersMap, onObserve);
     }
 
     bool setProp(const std::string& name, const std::string& value) {
@@ -59,6 +72,11 @@ protected:
 		const OC::HeaderOptions& opts,
 		const OC::OCRepresentation& rep, const int eCode);
 
+    virtual void onObserve(BaseResourceClient::onObserveCb onObserveHandler,
+    	const OC::HeaderOptions& opts,
+        const OC::OCRepresentation& rep, const int eCode,
+        const int& sequenceNumber);
+
 private:
 	static constexpr const char* LOG_TAG = "ShouseResourceClient"; 
 
@@ -67,9 +85,16 @@ private:
 	std::map<std::string, ResourceProperty> mPropertiesMap;
 
 private:
+	const bool mIsAsync;
+
+	bool isObserveStarted = false;
+
 	mutable std::condition_variable mTransactionFinished;
-	mutable std::mutex mTransactionFinishedLock;
+	mutable std::mutex mTransactionLock;
 	mutable bool mTransactionFinishedFlag;
+
+	inline void acquireResource() const { mTransactionLock.lock(); }
+	inline void releaseResource() const { mTransactionLock.unlock(); }
 
 	void transactionWait() const;
 	void transactionNotify() const;

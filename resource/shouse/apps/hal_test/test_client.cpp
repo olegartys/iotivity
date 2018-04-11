@@ -165,6 +165,18 @@ static void onPut(const OC::HeaderOptions&,
     }
 }
 
+static void onObserve(const OC::HeaderOptions&,
+        const std::map<std::string, ResourceProperty>& props, const int eCode) {
+    Log::info(LOG_TAG, "Observe callback: {}", eCode);
+
+    Log::debug(LOG_TAG, "Properties of /a/light: ");
+    for (const auto& prop: props) {
+        auto p = prop.second;
+        Log::debug(LOG_TAG, "name: {}, type: {}, val: {}",
+            p.mName, propertyTypeToStr(p.mType), p.mValue);
+    }
+}
+
 int main(int argc, char** argv) {
     ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_CLIENT>();
 
@@ -180,14 +192,24 @@ int main(int argc, char** argv) {
 
     auto lightResource = gResourceHolder.getResourceSync("/a/light");
 
+    lightResource->startObserve(onObserve);
+
     lightResource->get(onGet);
+
+    /* This set of setProp calls is in race condition with observation thread.
+     */
 
     lightResource->setProp("lightness", "5");
     lightResource->setProp("state", "1");
     lightResource->setProp("some_param", "pararam");
+
     lightResource->put(onPut);
 
     lightResource->get(onGet);
+
+    sleep(5);
+
+    lightResource->stopObserve();
 
     // A condition variable will free the mutex it is given, then do a non-
     // intensive block until 'notify' is called on it.  In this case, since we

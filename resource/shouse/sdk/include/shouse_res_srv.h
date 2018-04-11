@@ -2,6 +2,12 @@
 #define SHOUSE_RES_SRV_H
 
 #include <memory>
+#include <atomic>
+#include <thread>
+#include <mutex>
+
+#include <OCPlatform.h>
+#include <OCApi.h>
 
 #include <HAL/shouse_res_hal.h>
 #include <dynamic_resource/dynamic_resource.h>
@@ -11,7 +17,9 @@
 
 class ShouseResourceServer : public BaseResourceServer<DynamicDataResource> {
 public:
-	ShouseResourceServer(const std::string& uri, const std::string& type, const std::string& iface) : BaseResourceServer(uri, type, iface) {}
+	ShouseResourceServer(const std::string& uri, const std::string& type, const std::string& iface) : 
+		BaseResourceServer(uri, type, iface),
+		mObserverThreadStarted(false) {}
 
 	~ShouseResourceServer();
 
@@ -25,15 +33,30 @@ protected:
 	inline const ShouseResourceServer* getSelfPtr() { return this; }
 
 protected:
+	mutable std::recursive_mutex mResourceLock;
+	inline void acquireResource() const { mResourceLock.lock(); }
+	inline void releaseResource() const { mResourceLock.unlock(); }
+
+protected:
 	ShouseServerHAL* mHal;
 	int mId;
 
 private:
 	bool handleGET(const OC::QueryParamsMap& params);
 	bool handlePUT(const OC::OCRepresentation& clientRepresentation, const OC::QueryParamsMap& params);
+	void handleObserve(const OC::QueryParamsMap& params);
 
 private:
 	static constexpr const char* LOG_TAG = "ShouseResourceServer";
+
+	OC::ObservationIds mObserverList;
+	std::atomic_bool mObserverThreadStarted;
+	std::thread mObserverThread;
+
+	void startObserverThread(const OC::QueryParamsMap& params);
+	void stopObserverThread();
+
+	void notifyObservers(int halRet);
 
 };
 

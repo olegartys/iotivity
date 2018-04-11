@@ -8,7 +8,7 @@ using namespace OC;
 using namespace std::placeholders;
 
 OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParametersMap,
-	BaseResourceClient::onGetCb onGetHandler, bool async) {
+	BaseResourceClient::onGetCb onGetHandler) {
 	OCStackResult ret;
 
 	auto onGet = std::bind(&ShouseResourceClient::onGet, this, onGetHandler,
@@ -20,7 +20,7 @@ OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParameter
 	 * response from server has come.
 	 */ 
 
-	if (!async) {
+	if (!mIsAsync) {
 		transactionWait();
 	}
 
@@ -28,7 +28,7 @@ OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParameter
 }
 
 OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap,
-	BaseResourceClient::onGetCb onPutHandler, bool async) {
+	BaseResourceClient::onGetCb onPutHandler) {
 	OCStackResult ret;
 
 	auto onPut = std::bind(&ShouseResourceClient::onPut, this, onPutHandler,
@@ -40,8 +40,42 @@ OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap
 	 * response from server has come.
 	 */ 
 
-	if (!async) {
+	if (!mIsAsync) {
 		transactionWait();
+	}
+
+	return ret;
+}
+
+OCStackResult ShouseResourceClient::startObserve(
+	const OC::QueryParamsMap& queryParametersMap,
+	onObserveCb onObserveHandler) {
+	OCStackResult ret;
+
+	auto onObserve = std::bind(&ShouseResourceClient::onObserve, this,
+		onObserveHandler,
+		_1, _2, _3, _4);
+
+	isObserveStarted = true;
+
+	ret = mOCResource->observe(ObserveType::Observe, queryParametersMap,
+		onObserve);
+
+	/* We do not care about whether the resource is async or not.
+	 * Observation is always asynchronous operation by its nature
+	 * and we can not synchronize with PUT/GET in any way beside
+	 * acquiring resource instance.
+	 */
+
+	return ret;
+}
+
+OCStackResult ShouseResourceClient::stopObserve() {
+	OCStackResult ret = OC_STACK_OK;
+
+	if (isObserveStarted) {
+		ret = mOCResource->cancelObserve();
+		isObserveStarted = false;
 	}
 
 	return ret;
@@ -50,10 +84,14 @@ OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap
 void ShouseResourceClient::onGet(BaseResourceClient::onGetCb onGetHandler,
 	const OC::HeaderOptions& opts,
 	const OC::OCRepresentation& rep, const int eCode) {
+	acquireResource();
+
 	updateRepr(rep);
 
 	if (onGetHandler)
 		onGetHandler(opts, mPropertiesMap, eCode);
+
+	releaseResource();
 
 	/* Transaction has come, callback finished - we are ready to perform
 	 * new transactions. Notify condition variable.
@@ -65,16 +103,45 @@ void ShouseResourceClient::onGet(BaseResourceClient::onGetCb onGetHandler,
 void ShouseResourceClient::onPut(BaseResourceClient::onPutCb onPutHandler,
 	const OC::HeaderOptions& opts,
 	const OC::OCRepresentation& rep, const int eCode) {
+	acquireResource();
+
 	updateRepr(rep);
 	
 	if (onPutHandler)
 		onPutHandler(opts, mPropertiesMap, eCode);
+
+	releaseResource();
 
 	/* Transaction has come, callback finished - we are ready to perform
 	 * new transactions. Notify condition variable.
 	 */
 
 	transactionNotify();
+}
+
+void ShouseResourceClient::onObserve(
+	BaseResourceClient::onObserveCb onObserveHandler,
+	const HeaderOptions& opts,
+	const OCRepresentation& rep, const int eCode,
+	const int& sequenceNumber) {
+	if (eCode == OC_STACK_OK) {
+		if (sequenceNumber == OC_OBSERVE_REGISTER) {
+			Log::info(LOG_TAG, "Observe registration action is successful");
+		}
+
+		acquireResource();
+
+		updateRepr(rep);
+
+		if (onObserveHandler)
+			onObserveHandler(opts, mPropertiesMap, eCode);
+
+		releaseResource();
+
+	} else {
+		Log::warn(LOG_TAG, "Error performing 'observe' transaction:{}",
+			eCode);
+	}
 }
 
 void ShouseResourceClient::updateRepr(const OC::OCRepresentation& rep) {
@@ -96,7 +163,7 @@ void ShouseResourceClient::updateRepr(const OC::OCRepresentation& rep) {
 
 void ShouseResourceClient::transactionWait() const {
 	mTransactionFinishedFlag = false;
-	std::unique_lock<std::mutex> lock(mTransactionFinishedLock);
+	std::unique_lock<std::mutex> lock(mTransactionLock);
 	mTransactionFinished.wait(lock,
 		[this]() { return this->mTransactionFinishedFlag; });
 }

@@ -261,6 +261,7 @@ public:
     {
         m_lightRep.setValue("state", m_state);
         m_lightRep.setValue("power", m_power);
+        m_lightRep.setValue("name", m_name);
 
         return m_lightRep;
     }
@@ -450,7 +451,7 @@ void * ChangeLightRepresentation (void *param)
     // This function continuously monitors for the changes
     while (1)
     {
-        sleep (3);
+        // sleep (3);
 
         if (gObservation)
         {
@@ -459,6 +460,8 @@ void * ChangeLightRepresentation (void *param)
             //
             // For demostration we are changing the power value and notifying.
             lightPtr->m_power += 10;
+
+             lightPtr->m_name = "PkYKOcn3rsipxpWWhz80ald3Pry08YXc6C4gnGwdzV4+ONUtj5jTLMpPCcDArxfQPHxtbZLC/v0XICAsMBz/Q1a1LxLceYrWl+yBOSgwQ/41m6lVQ7+plOjSnU909y0vx5p1+AtyfKYHnNbNvqtpMoeOZTk4HOc18/WvxEgmtRFdxsGBGCg5Nb3hz4lRi4EElycem01VHEVIq8tTlqYXnvynswn2sHJyCeoo+0iNtrksCeD6VwVp8R7CKbyotXUgAF1fjH51oN48FxzbSxNjsOpruhiaa1tY4506tN8sjopXWPXYQWPzr146+lZniWJRqMm44BPAqlYeKrfU9VgEjBGD8L9PetLxSxNyJ124ZBjBrsnKnWw3MtDib5MRc5rUWZVIwcD71cdr5SNw7EMhPRq7HVZDLF5YyCw6gVx3iPZEOF3EHBNeRioOdHSVz0aFVRqXsc5ezW0rmEMQWPQVSu0m2+XCSVX+7Vy5t41la4fCjtzVO4uWkylrKBnqMV5lKPtJe/r+Z3urNSVlp6FKVQiluc9eT0rK1KWOYeU7YOc1qzQpKzIbnOOc4rLvIES4Y7csq8nFawrKLs9uxhXtKygzPv4hGqbV4boQOlZF9M+85HzAdq1LydGZdoJzwB6e9Zt3sWYqGye3oa7Kc6cKl+nY5pRlGkpP+vkYWqJJc20juhzg4ArhtXja/064gdlwFJ";
 
             cout << "\nPower updated to : " << lightPtr->m_power << endl;
             cout << "Notifying observers with resource handle: " << lightPtr->getHandle() << endl;

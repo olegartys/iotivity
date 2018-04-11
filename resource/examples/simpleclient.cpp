@@ -94,6 +94,7 @@ void onObserve(const HeaderOptions /*headerOptions*/, const OCRepresentation& re
             std::cout << "\tpower: " << mylight.m_power << std::endl;
             std::cout << "\tname: " << mylight.m_name << std::endl;
 
+#if 0
             if(observe_count() == 11)
             {
                 std::cout<<"Cancelling Observe..."<<std::endl;
@@ -104,6 +105,7 @@ void onObserve(const HeaderOptions /*headerOptions*/, const OCRepresentation& re
                 std::cout << "DONE"<<std::endl;
                 std::exit(0);
             }
+#endif
         }
         else
         {

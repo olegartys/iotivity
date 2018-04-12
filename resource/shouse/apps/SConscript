@@ -5,3 +5,8 @@ SConscript('#resource/shouse/apps/hal_test/SConscript')
 
 # Legacy apps
 SConscript('#resource/shouse/apps/legacy/SConscript')
+
+# RP2 bcm lib
+SConscript('#resource/shouse/apps/rp2/bcm2835/SConscript')
+# RP2 HAL DLLS
+SConscript('#resource/shouse/apps/rp2/HAL/SConscript')

@@ -1,0 +1,13 @@
+Import('shouse_env')
+
+bcm2835_env = shouse_env.Clone()
+
+# IoTivity libs
+bcm2835_env.AppendUnique(RPATH = [bcm2835_env.get('BUILD_DIR')])
+
+bcm2835_env.AppendUnique(CXXFLAGS = ['-g'])
+
+#Build BCM2835 lib
+bcm2835_env.SharedLibrary('bcm2835', ['src/bcm2835.c'])
+
+bcm2835_env.AppendTarget('bcm2835')

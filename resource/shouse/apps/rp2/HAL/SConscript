@@ -1,0 +1,46 @@
+Import('shouse_env')
+
+hal_test_env = shouse_env.Clone()
+
+hal_test_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/',
+	'#/resource/shouse/apps/rp2/bcm2835/src'
+        ])
+
+# IoTivity libs
+hal_test_env.AppendUnique(RPATH = [hal_test_env.get('BUILD_DIR')])
+hal_test_env.PrependUnique(LIBS = ['coap'])
+
+hal_test_env.AppendUnique(LIBS = ['octbstack'])
+hal_test_env.AppendUnique(LIBS = ['oc'])
+
+hal_test_env.AppendUnique(LIBS = ['ocsrm'])
+
+#hal_test_env.AppendUnique(LIBS = ['RamlParser'])
+
+hal_test_env.AppendUnique(LIBS = ['shouse_core'])
+hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
+
+hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
+
+# HAL-based interface
+#hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
+#hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
+
+# DLL Diod HAL module
+hal_test_env.SharedLibrary('HAL_RP2_diod', ['diod_hal_dll.cpp'])
+
+# DLL Motion Sensor HAL module
+hal_test_env.SharedLibrary('HAL_RP2_motion', ['motion_sensor_hal_dll.cpp'])
+
+hal_test_env.AppendTarget('hal_test')

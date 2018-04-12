@@ -1,0 +1,6 @@
+[submodule "spdlog"]
+	path = resource/shouse/sdk/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "resource/shouse/apps/rp2/bcm2835"]
+	path = resource/shouse/apps/rp2/bcm2835
+	url = https://github.com/matthiasbock/bcm2835.git

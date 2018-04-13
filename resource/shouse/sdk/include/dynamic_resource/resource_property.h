@@ -20,6 +20,8 @@ struct ResourceProperty final {
 
     bool toJson(std::string& out) const;
 
+    friend std::string to_string(const ResourceProperty& resourceProperty);
+
     std::string mName;
     Type 		mType;
     std::string mValue;

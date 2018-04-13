@@ -112,3 +112,13 @@ bool ResourceProperty::toJson(std::string& out) const {
 
 	return true;
 }
+
+std::string to_string(const ResourceProperty& resourceProperty) {
+	std::string jsonStr;
+
+	if (!resourceProperty.toJson(jsonStr)) {
+		return "";
+	}
+
+	return jsonStr;
+}

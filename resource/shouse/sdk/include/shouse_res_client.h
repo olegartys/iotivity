@@ -15,9 +15,13 @@
 
 class ShouseResourceClient : public BaseResourceClient<DynamicDataResource> {
 public:
-	ShouseResourceClient(const std::string& uri, const std::string& type,
+	ShouseResourceClient(const std::string& name,
+		const std::string& uri, const std::string& type,
 		const std::string& iface, bool async = false) :
-		BaseResourceClient(uri, type, iface), mIsAsync(async) {}
+		BaseResourceClient(uri, type, iface), mName(std::move(name)),
+		mIsAsync(async) {}
+
+	~ShouseResourceClient() = default;
 
 	virtual OCStackResult get(const OC::QueryParamsMap& queryParametersMap,
 		onGetCb onGet) override;
@@ -63,7 +67,11 @@ public:
     	return mPropertiesMap;
     }
 
+    friend std::string to_string(const ShouseResourceClient& resourceClient);
+
 protected:
+	const std::string mName;
+
 	virtual void onGet(BaseResourceClient::onGetCb onGetHandler,
 		const OC::HeaderOptions& opts,
 		const OC::OCRepresentation& rep, const int eCode);

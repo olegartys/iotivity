@@ -50,13 +50,20 @@ shouse_core_src = [
     'src/dynamic_resource.cpp'
 ]
 
+shouse_core = shouse_sdk_env.SharedLibrary('shouse_core', shouse_core_src)
+shouse_sdk_env.InstallTarget(shouse_core, 'libshouse_core')
+shouse_sdk_env.UserInstallTargetLib(shouse_core, 'libshouse_core')
+
+# Utils library
+
+shouse_sdk_env_utils = shouse_sdk_env.Clone()
+
+shouse_sdk_env_utils.AppendUnique(LIBS = ['shouse_core'])
+
 shouse_utils_src = [
     'src/shouse_default_platform.cpp',
 ]
 
-shouse_core = shouse_sdk_env.SharedLibrary('shouse_core', shouse_core_src)
-shouse_utils = shouse_sdk_env.SharedLibrary('shouse_utils', shouse_utils_src)
-
-shouse_sdk_env.InstallTarget(shouse_core, 'libshouse_core')
-shouse_sdk_env.InstallTarget(shouse_utils, 'libshouse_utils')
-
+shouse_utils = shouse_sdk_env_utils.SharedLibrary('shouse_utils', shouse_utils_src)
+shouse_sdk_env_utils.InstallTarget(shouse_utils, 'libshouse_utils')
+shouse_sdk_env_utils.UserInstallTargetLib(shouse_utils, 'libshouse_utils')

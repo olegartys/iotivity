@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <functional>
 
 #include <shouse_res_srv.h>
@@ -171,6 +172,7 @@ void ShouseResourceServer::notifyObservers(int halRet) {
         response);
     if (result == OC_STACK_NO_OBSERVERS) {
         Log::warn(LOG_TAG, "No more observers exists");
+        stopObserverThread();
     }
 }
 
@@ -271,4 +273,29 @@ ShouseResourceServer::~ShouseResourceServer() {
     if (mHal) {
         mHal->close(mId);
     }
+}
+
+std::string to_string(const ShouseResourceServer& resourceServer) {
+    std::stringstream ss;
+
+    ss << "Resource " << resourceServer.mName << "\n";
+    ss << std::setw(10) << "uri:\t" << resourceServer.mResource->uri() << '\n'
+       << std::setw(10) << "type:\t" << resourceServer.mResource->type() << '\n'
+       << std::setw(10) << "iface:\t" << resourceServer.mResource->iface() << '\n';
+
+    ss << std::setw(10) << "properties: \n";
+
+    for (const auto& defaultProp: resourceServer.mHal->properties()) {
+        auto propName = defaultProp.mName;
+
+        // Get current property value from Resource
+
+        ResourceProperty prop;
+        if (resourceServer.mResource->getProp(prop, propName)) {
+            ss << std::setw(20) << propName << "\n" 
+               << std::setw(20) << to_string(prop) << "\n";
+        }
+    }
+
+    return ss.str();
 }

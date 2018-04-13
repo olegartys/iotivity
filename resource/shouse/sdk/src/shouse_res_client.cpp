@@ -1,4 +1,6 @@
 #include <functional>
+#include <sstream>
+#include <iomanip>
 
 #include <shouse_res_client.h>
 
@@ -171,4 +173,22 @@ void ShouseResourceClient::transactionWait() const {
 void ShouseResourceClient::transactionNotify() const {
 	mTransactionFinishedFlag = true;
 	mTransactionFinished.notify_all();
+}
+
+std::string to_string(const ShouseResourceClient& resourceClient) {
+	std::stringstream ss;
+
+    ss << "Resource " << resourceClient.mName << "\n";
+    ss << std::setw(10) << "uri:\t" << resourceClient.mResource->uri() << '\n'
+       << std::setw(10) << "type:\t" << resourceClient.mResource->type() << '\n'
+       << std::setw(10) << "iface:\t" << resourceClient.mResource->iface() << '\n';
+
+    ss << std::setw(10) << "properties: \n";
+
+    for (const auto& prop: resourceClient.mPropertiesMap) {
+		ss << std::setw(20) << prop.first << "\n" 
+		   << std::setw(20) << to_string(prop.second) << "\n";
+    }
+
+    return ss.str();
 }

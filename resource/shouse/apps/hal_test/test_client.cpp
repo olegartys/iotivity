@@ -128,13 +128,13 @@ static void onFoundResource(std::shared_ptr<OCResource> resource) {
 
     if (resource->uri() == "/a/light") {
         ShouseResourceClient* lightClient =
-            new ShouseResourceClient("/a/light", "t", "iface");
+            new ShouseResourceClient("light", "/a/light", "t", "iface");
         lightClient->setOCResource(resource);
 
         gResourceHolder.addResource(resource->uri(), lightClient);
     } else if (resource->uri() == "/a/camera") {
         ShouseResourceClient* cameraClient = 
-            new ShouseResourceClient("/a/camera", "t", "iface");
+            new ShouseResourceClient("camera", "/a/camera", "t", "iface");
         cameraClient->setOCResource(resource);
 
         gResourceHolder.addResource(resource->uri(), cameraClient);
@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
     // Wait for camera to be added
 
     auto cameraResource = gResourceHolder.getResourceSync("/a/camera");
-    
+
     /* It does not work */
 
     // cameraResource->startObserve(onObserve);

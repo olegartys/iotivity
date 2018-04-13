@@ -17,13 +17,17 @@
 
 class ShouseResourceServer : public BaseResourceServer<DynamicDataResource> {
 public:
-	ShouseResourceServer(const std::string& uri, const std::string& type, const std::string& iface) : 
+	ShouseResourceServer(const std::string& name,
+		const std::string& uri, const std::string& type,
+		const std::string& iface) : 
 		BaseResourceServer(uri, type, iface),
-		mObserverThreadStarted(false) {}
+		mName(std::move(name)), mObserverThreadStarted(false) {}
 
 	~ShouseResourceServer();
 
 	virtual bool createResource(ShouseServerHAL* hal);
+
+	friend std::string to_string(const ShouseResourceServer& resourceServer);
 
 protected:
 	virtual OCEntityHandlerResult entityHandler(std::shared_ptr<OC::OCResourceRequest> request) override;
@@ -38,6 +42,7 @@ protected:
 	inline void releaseResource() const { mResourceLock.unlock(); }
 
 protected:
+	const std::string mName;
 	ShouseServerHAL* mHal;
 	int mId;
 

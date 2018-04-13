@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ShouseResourceServer lightServerDll("/a/light", "type", "iface");
+    ShouseResourceServer lightServerDll("light", "/a/light", "type", "iface");
     if (!lightServerDll.createResource(dllLightHal)) {
         Log::error(LOG_TAG, "Error creating resource from DLL");
     }
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ShouseResourceServer cameraServerDll("/a/camera", "type", "iface");
+    ShouseResourceServer cameraServerDll("camera", "/a/camera", "type", "iface");
     if (!cameraServerDll.createResource(dllCameraHal)) {
         Log::error(LOG_TAG, "Error creating camera resource");
     }

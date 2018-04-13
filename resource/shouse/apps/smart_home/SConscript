@@ -1,0 +1,55 @@
+Import('shouse_env')
+
+smart_home_env = shouse_env.Clone()
+
+smart_home_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'#/resource/shouse',
+		'#/resource/shouse/spdlog',
+		'#/service/simulator/ramlparser/raml',
+		'#/service/simulator/ramlparser/raml/model',
+		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+		'#/extlibs/yaml/yaml/include',
+
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/'
+        ])
+
+# IoTivity libs
+smart_home_env.AppendUnique(RPATH = [smart_home_env.get('BUILD_DIR')])
+smart_home_env.PrependUnique(LIBS = ['coap'])
+
+smart_home_env.AppendUnique(LIBS = ['octbstack'])
+smart_home_env.AppendUnique(LIBS = ['oc'])
+
+smart_home_env.AppendUnique(LIBS = ['ocsrm'])
+
+smart_home_env.AppendUnique(LIBS = ['RamlParser'])
+
+smart_home_env.AppendUnique(LIBS = ['shouse_core'])
+smart_home_env.AppendUnique(LIBS = ['shouse_utils'])
+
+smart_home_env.AppendUnique(CXXFLAGS = ['-g'])
+
+# HAL
+SConscript('#resource/shouse/apps/smart_home/HAL/SConscript')
+
+# OpenCV libs
+# smart_home_env.AppendUnique(LIBS = ['opencv_imgproc'])
+# smart_home_env.AppendUnique(LIBS = ['opencv_core'])
+# smart_home_env.AppendUnique(LIBS = ['opencv_videoio']) 
+# smart_home_env.AppendUnique(LIBS = ['opencv_highgui']) 
+# smart_home_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
+
+smart_home_env.Program('smart_home_server', ['smart_home_server.cpp'])
+smart_home_env.Program('smart_home_client', ['smart_home_client.cpp'])
+
+smart_home_env.AppendTarget('smart_home')

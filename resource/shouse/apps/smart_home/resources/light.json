@@ -1,0 +1,8 @@
+{
+	"name": "room_light1",
+	"uri": "/main_room/light1",
+	"type": "light",
+	"iface": "lightable",
+	"hal" : "/home/olegartys/src/iotivity/resource/shouse/apps/smart_home/HAL/liblight_hal.so",
+	"async": false
+}

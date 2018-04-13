@@ -10,7 +10,7 @@ class BaseResource {
 public:
     virtual ~BaseResource() = default;
 
-    BaseResource(const std::string& uri, const std::string& iface, const std::string& type) :
+    BaseResource(const std::string& uri, const std::string& type, const std::string& iface) :
         mUri(uri), mIface(iface), mType(type) {}
 
     inline const std::string& uri() const { return mUri; }

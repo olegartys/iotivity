@@ -172,6 +172,7 @@ void ShouseResourceServer::notifyObservers(int halRet) {
         response);
     if (result == OC_STACK_NO_OBSERVERS) {
         Log::warn(LOG_TAG, "No more observers exists");
+        stopObserverThread();
     }
 }
 

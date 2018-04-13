@@ -38,6 +38,11 @@ public:
 
     virtual OCStackResult stopObserve() = 0;
 
+public:
+    const std::string& uri() const { return mResource->uri(); }
+    const std::string& type() const { return mResource->type(); }
+    const std::string& iface() const { return mResource->iface(); }
+
 protected:
     template <typename... Args>
     BaseResourceClient(Args&&... args) {

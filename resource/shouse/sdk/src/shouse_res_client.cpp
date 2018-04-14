@@ -9,12 +9,16 @@
 using namespace OC;
 using namespace std::placeholders;
 
+static int counter = 0;
+
 OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParametersMap,
 	BaseResourceClient::onGetCb onGetHandler) {
 	OCStackResult ret;
 
 	auto onGet = std::bind(&ShouseResourceClient::onGet, this, onGetHandler,
 		_1, _2, _3);
+
+	Log::error(LOG_TAG, "Sending request: {}", counter);
 
 	ret = mOCResource->get(queryParametersMap, onGet);
 
@@ -24,6 +28,10 @@ OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParameter
 
 	if (!mIsAsync) {
 		transactionWait();
+	}
+
+	if (type() == "camera") {
+		Log::error(LOG_TAG, "Response from camera: {}", counter++);
 	}
 
 	return ret; 

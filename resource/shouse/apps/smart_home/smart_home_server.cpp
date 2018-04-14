@@ -61,15 +61,18 @@ static void monitorResources(const ResourcesPtrList& resourcesList) {
 int main() {
 	ShouseDefaultPlatform::Configure<PlatformType::SHOUSE_SERVER>();
 
+	Log::setLevel(spdlog::level::err);
+	// Log::setOutputFile("server.log");
+
 	ResourcesPtrList resources;
 
 	if (loadResources(RESOURCES_DIR, resources) < 0) {
 		return -1;
 	}
 
-	monitorResources(resources);
+	// monitorResources(resources);
 
-#if 0
+#if 1
 	std::mutex blocker;
 	std::condition_variable cv;
 	std::unique_lock<std::mutex> lock(blocker);

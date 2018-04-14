@@ -1,0 +1,8 @@
+{
+	"name": "web_camera",
+	"uri": "/just_camera",
+	"type": "camera",
+	"iface": "cameraable",
+	"hal" : "/home/olegartys/src/iotivity/resource/shouse/apps/smart_home/HAL/libcamera_hal.so",
+	"async": false
+}

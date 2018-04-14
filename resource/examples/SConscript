@@ -77,6 +77,8 @@ if target_os == 'android':
 if target_os in ['msys_nt', 'windows']:
     examples_env.AppendUnique(LIBS = ['Comctl32', 'Gdi32', 'User32'])
 
+examples_env.AppendUnique(CXXFLAGS = ['-g'])
+
 def make_single_file_cpp_program(program_name):
     return examples_env.Program(program_name, program_name + ".cpp")
 

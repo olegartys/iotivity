@@ -252,7 +252,7 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
         }
 
         // Update the representation with the new value
-        mResource->setProp(prop, newValue);
+        mResource->setProp(prop, parsedProp.mValue);
     }
 
     releaseResource();
@@ -285,6 +285,8 @@ std::string to_string(const ShouseResourceServer& resourceServer) {
 
     ss << std::setw(10) << "properties: \n";
 
+    resourceServer.acquireResource();
+
     for (const auto& defaultProp: resourceServer.mHal->properties()) {
         auto propName = defaultProp.mName;
 
@@ -296,6 +298,8 @@ std::string to_string(const ShouseResourceServer& resourceServer) {
                << std::setw(20) << to_string(prop) << "\n";
         }
     }
+
+    resourceServer.releaseResource();
 
     return ss.str();
 }

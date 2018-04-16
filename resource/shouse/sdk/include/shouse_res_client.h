@@ -50,18 +50,7 @@ public:
     	return startObserve(queryParametersMap, onObserve);
     }
 
-    bool setProp(const std::string& name, const std::string& value) {
-    	auto curProp = mPropertiesMap[name];
-
-    	// Update resource representation and internal map of props
-
-    	auto ret = mResource->setProp(curProp, value);
-    	if (ret) {
-		    mPropertiesMap[name] = curProp;    		
-    	}
-
-    	return ret;
-    }
+    bool setProp(const std::string& name, const std::string& value);
 
     const std::map<std::string, ResourceProperty>& properties() const {
     	return mPropertiesMap;

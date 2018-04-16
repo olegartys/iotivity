@@ -16,7 +16,9 @@ OCStackResult ShouseResourceClient::get(const OC::QueryParamsMap& queryParameter
 	auto onGet = std::bind(&ShouseResourceClient::onGet, this, onGetHandler,
 		_1, _2, _3);
 
+	acquireResource();
 	ret = mOCResource->get(queryParametersMap, onGet);
+	releaseResource();
 
 	/* If we called synchronously, than wait for the 'onGet' to notfy that
 	 * response from server has come.
@@ -36,7 +38,9 @@ OCStackResult ShouseResourceClient::put(const QueryParamsMap& queryParametersMap
 	auto onPut = std::bind(&ShouseResourceClient::onPut, this, onPutHandler,
 		_1, _2, _3);
 
+	acquireResource();
 	ret = mOCResource->put(mResource->repr(), queryParametersMap, onPut);
+	releaseResource();
 
 	/* If we called synchronously, than wait for the 'onGet' to notfy that
 	 * response from server has come.
@@ -79,6 +83,25 @@ OCStackResult ShouseResourceClient::stopObserve() {
 		ret = mOCResource->cancelObserve();
 		isObserveStarted = false;
 	}
+
+	return ret;
+}
+
+bool ShouseResourceClient::setProp(const std::string& name,
+	const std::string& value) {
+
+	acquireResource();
+
+	auto curProp = mPropertiesMap[name];
+
+	// Update resource representation and internal map of props
+
+	auto ret = mResource->setProp(curProp, value);
+	if (ret) {
+	    mPropertiesMap[name] = curProp;    		
+	}
+
+	releaseResource();
 
 	return ret;
 }
@@ -185,10 +208,14 @@ std::string to_string(const ShouseResourceClient& resourceClient) {
 
     ss << std::setw(10) << "properties: \n";
 
+    resourceClient.acquireResource();
+
     for (const auto& prop: resourceClient.mPropertiesMap) {
 		ss << std::setw(20) << prop.first << "\n" 
 		   << std::setw(20) << to_string(prop.second) << "\n";
     }
+
+    resourceClient.releaseResource();
 
     return ss.str();
 }

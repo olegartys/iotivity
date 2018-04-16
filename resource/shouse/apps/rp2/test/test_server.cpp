@@ -63,7 +63,6 @@ using namespace std;
 
 static const char* LOG_TAG = "test_rp2_server";
 
-
 int main(int argc, char** argv) {
     if (argc < 3) {
         printf("Not Enough Arguments: Need Diod Hal path and Motion Sensor Hal path\n");

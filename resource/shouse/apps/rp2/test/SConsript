@@ -39,7 +39,7 @@ hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
 
 # HAL-based interface
 hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
-#hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
+hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
 
 hal_test_env.AppendTarget('hal_test')
 

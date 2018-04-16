@@ -14,10 +14,10 @@ hal_test_env.AppendUnique(CPPPATH = [
         '#/resource/oc_logger/include',
 		'#/resource/shouse',
 		'#/resource/shouse/spdlog',
-		'#/service/simulator/ramlparser/raml',
-		'#/service/simulator/ramlparser/raml/model',
-		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
-		'#/extlibs/yaml/yaml/include',
+#		'#/service/simulator/ramlparser/raml',
+#		'#/service/simulator/ramlparser/raml/model',
+#		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+#		'#/extlibs/yaml/yaml/include',
 
         '#/resource/shouse/sdk/include',
         '#/resource/shouse/sdk/'
@@ -32,7 +32,7 @@ hal_test_env.AppendUnique(LIBS = ['oc'])
 
 hal_test_env.AppendUnique(LIBS = ['ocsrm'])
 
-hal_test_env.AppendUnique(LIBS = ['RamlParser'])
+#hal_test_env.AppendUnique(LIBS = ['RamlParser'])
 
 hal_test_env.AppendUnique(LIBS = ['shouse_core'])
 hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
@@ -40,20 +40,20 @@ hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
 hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
 
 # OpenCV libs
-hal_test_env.AppendUnique(LIBS = ['opencv_imgproc'])
-hal_test_env.AppendUnique(LIBS = ['opencv_core'])
-hal_test_env.AppendUnique(LIBS = ['opencv_videoio']) 
-hal_test_env.AppendUnique(LIBS = ['opencv_highgui']) 
-hal_test_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
+#hal_test_env.AppendUnique(LIBS = ['opencv_imgproc'])
+#hal_test_env.AppendUnique(LIBS = ['opencv_core'])
+#hal_test_env.AppendUnique(LIBS = ['opencv_videoio']) 
+#hal_test_env.AppendUnique(LIBS = ['opencv_highgui']) 
+#hal_test_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
 
 # HAL-based interface
-hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
-hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
+#hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
+#hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
 
 # DLL Light HAL module
 hal_test_env.SharedLibrary('HAL_light', ['test_dll_hal.cpp'])
 
 # DLL Videocamera HAL module
-hal_test_env.SharedLibrary('HAL_videocamera', ['camera_dll_hal.cpp'])
+#hal_test_env.SharedLibrary('HAL_videocamera', ['camera_dll_hal.cpp'])
 
 hal_test_env.AppendTarget('hal_test')

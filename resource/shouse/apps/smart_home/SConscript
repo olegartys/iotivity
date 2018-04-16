@@ -14,10 +14,10 @@ smart_home_env.AppendUnique(CPPPATH = [
         '#/resource/oc_logger/include',
 		'#/resource/shouse',
 		'#/resource/shouse/spdlog',
-		'#/service/simulator/ramlparser/raml',
-		'#/service/simulator/ramlparser/raml/model',
-		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
-		'#/extlibs/yaml/yaml/include',
+#		'#/service/simulator/ramlparser/raml',
+#		'#/service/simulator/ramlparser/raml/model',
+#		'#/service/simulator/ramlparser/raml/jsonSchemaParser',
+#		'#/extlibs/yaml/yaml/include',
 
         '#/resource/shouse/sdk/include',
         '#/resource/shouse/sdk/'
@@ -32,7 +32,7 @@ smart_home_env.AppendUnique(LIBS = ['oc'])
 
 smart_home_env.AppendUnique(LIBS = ['ocsrm'])
 
-smart_home_env.AppendUnique(LIBS = ['RamlParser'])
+#smart_home_env.AppendUnique(LIBS = ['RamlParser'])
 
 smart_home_env.AppendUnique(LIBS = ['shouse_core'])
 smart_home_env.AppendUnique(LIBS = ['shouse_utils'])

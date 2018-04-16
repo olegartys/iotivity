@@ -37,18 +37,17 @@ smart_home_env.AppendUnique(LIBS = ['RamlParser'])
 smart_home_env.AppendUnique(LIBS = ['shouse_core'])
 smart_home_env.AppendUnique(LIBS = ['shouse_utils'])
 
-smart_home_env.AppendUnique(LIBS = ['asan'])
-smart_home_env.AppendUnique(CXXFLAGS = ['-g', '-fsanitize=address', '-fno-omit-frame-pointer'])
+smart_home_env.AppendUnique(CXXFLAGS = ['-g'])
 
 # HAL
 SConscript('#resource/shouse/apps/smart_home/HAL/SConscript')
 
 # OpenCV libs
-smart_home_env.AppendUnique(LIBS = ['opencv_imgproc'])
-smart_home_env.AppendUnique(LIBS = ['opencv_core'])
-smart_home_env.AppendUnique(LIBS = ['opencv_videoio']) 
-smart_home_env.AppendUnique(LIBS = ['opencv_highgui']) 
-smart_home_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
+# smart_home_env.AppendUnique(LIBS = ['opencv_imgproc'])
+# smart_home_env.AppendUnique(LIBS = ['opencv_core'])
+# smart_home_env.AppendUnique(LIBS = ['opencv_videoio']) 
+# smart_home_env.AppendUnique(LIBS = ['opencv_highgui']) 
+# smart_home_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
 
 smart_home_env.Program('smart_home_server', ['smart_home_server.cpp'])
 smart_home_env.Program('smart_home_client', ['smart_home_client.cpp'])

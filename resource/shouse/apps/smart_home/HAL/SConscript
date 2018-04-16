@@ -39,27 +39,15 @@ smart_home_hal_env.AppendUnique(LIBS = ['shouse_utils'])
 
 smart_home_hal_env.AppendUnique(CXXFLAGS = ['-g'])
 
-# Light HAL
+# OpenCV libs
+# smart_home_hal_env.AppendUnique(LIBS = ['opencv_imgproc'])
+# smart_home_hal_env.AppendUnique(LIBS = ['opencv_core'])
+# smart_home_hal_env.AppendUnique(LIBS = ['opencv_videoio']) 
+# smart_home_hal_env.AppendUnique(LIBS = ['opencv_highgui']) 
+# smart_home_hal_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
 
 light_hal = smart_home_hal_env.SharedLibrary('light_hal', ['light_hal.cpp'])
 smart_home_hal_env.InstallTarget(light_hal, 'liblight_hal')
 smart_home_hal_env.UserInstallTargetLib(light_hal, 'liblight_hal')
 
 smart_home_hal_env.AppendTarget('HAL')
-
-# Camera HAL (clone environment to prevent linking of other HALs with OpenCV)
-
-smart_home_camera_hal_env = smart_home_hal_env.Clone()
-
-# OpenCV libs
-smart_home_camera_hal_env.AppendUnique(LIBS = ['opencv_imgproc'])
-smart_home_camera_hal_env.AppendUnique(LIBS = ['opencv_core'])
-smart_home_camera_hal_env.AppendUnique(LIBS = ['opencv_videoio']) 
-smart_home_camera_hal_env.AppendUnique(LIBS = ['opencv_highgui']) 
-smart_home_camera_hal_env.AppendUnique(LIBS = ['opencv_imgcodecs'])
-
-camera_hal = smart_home_camera_hal_env.SharedLibrary('camera_hal', ['camera_hal.cpp'])
-smart_home_camera_hal_env.InstallTarget(camera_hal, 'libcamera_hal')
-smart_home_camera_hal_env.UserInstallTargetLib(camera_hal, 'libcamera_hal')
-
-smart_home_camera_hal_env.AppendTarget('CameraHAL')

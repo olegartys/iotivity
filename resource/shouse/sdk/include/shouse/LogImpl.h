@@ -12,117 +12,116 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
-static std::shared_ptr<spdlog::logger> createLogger(const std::string& TAG) {
-    std::shared_ptr<spdlog::logger> logger;
-
-    if (LogParamsHolder::LogPrintFile()) {
-        logger = spdlog::basic_logger_mt(TAG, LogParamsHolder::LogPrintFileName());
-    } else {
-        logger = spdlog::stdout_color_mt(TAG);
-    }
-
-    return std::move(logger);
-}
-
 template <typename T>
 void Log::info(const std::string& TAG, const T& val) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->info(val);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->info(val);
     }
-
-    logger->info(val);
 }
 
 template <typename ...Args>
 void Log::info(const std::string& TAG, const char* fmt, const Args&... args) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->info(fmt, args...);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->info(fmt, args...);
     }
-
-    logger->info(fmt, args...);
 }
 
 // FIXME: for some reason debug from spdlog doesn't work on my machine
 template <typename T>
 void Log::debug(const std::string& TAG, const T& val) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
-    }
 
-    logger->info(val);
+    if (logger != nullptr) {
+        logger->info(val);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->info(val);
+    }
 }
 
 template <typename ...Args>
 void Log::debug(const std::string& TAG, const char* fmt, const Args&... args) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->info(fmt, args...);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->info(fmt, args...);
     }
-    
-    logger->info(fmt, args...);
 }
 
 template <typename T>
 void Log::warn(const std::string& TAG, const T& val) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->warn(val);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->warn(val);
     }
-
-    logger->warn(val);
 }
 
 template <typename ...Args>
 void Log::warn(const std::string& TAG, const char* fmt, const Args&... args) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->warn(fmt, args...);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->warn(fmt, args...);
     }
-    
-    logger->warn(fmt, args...);
 }
 
 template <typename T>
 void Log::error(const std::string& TAG, const T& val) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->error(val);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->error(val);
     }
-    
-    logger->error(val);
 }
 
 template <typename ...Args>
 void Log::error(const std::string& TAG, const char* fmt, const Args&... args) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->error(fmt, args...);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->error(fmt, args...);
     }
-
-    logger->error(fmt, args...);
 }
 
 template <typename T>
 void Log::critical(const std::string& TAG, const T& val) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->critical(val);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->critical(val);
     }
-
-    logger->critical(val);
 }
 
 template <typename ...Args>
 void Log::critical(const std::string& TAG, const char* fmt, const Args&... args) {
     auto logger = spdlog::get(TAG);
-    if (!logger) {
-        logger = createLogger(TAG);
+    if (logger) {
+        logger->critical(fmt, args...);
+    } else {
+        logger = spdlog::stdout_color_mt(TAG);
+        logger->critical(fmt, args...);
     }
-
-    logger->critical(fmt, args...);
 }
 
 #endif //SHOUSESERVERCOMPONENT_LOGIMPL_H

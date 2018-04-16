@@ -260,13 +260,8 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
     return true;
 }
 
-static int count = 0;
-
 void ShouseResourceServer::sendResponse(std::shared_ptr<OCResourceResponse> resp) const {
     Log::info(LOG_TAG, "{}: Sending response...", __FUNCTION__);
-    if (type() == "camera") {
-        Log::error(LOG_TAG, "{}: Sending response {}...", count++, __FUNCTION__);
-    }
     if (OCPlatform::sendResponse(resp) != OC_STACK_OK) {
         Log::error(LOG_TAG, "{}: failed!", __FUNCTION__);
     }

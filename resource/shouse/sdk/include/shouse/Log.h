@@ -9,30 +9,9 @@
 
 #include "spdlog/include/spdlog/spdlog.h"
 
-struct LogParamsHolder {
-    static bool& LogPrintFile() {
-        static bool logPrintFile;
-        return logPrintFile;
-    }
-
-    static std::string& LogPrintFileName() { 
-        static std::string logPrintFileName;
-        return logPrintFileName;
-    }
-};
-
 class Log {
 public:
     Log() = delete;
-
-    static void setOutputFile(const std::string& path) {
-        LogParamsHolder::LogPrintFile() = true;
-        LogParamsHolder::LogPrintFileName() = path;
-    }
-
-    static void setLevel(spdlog::level::level_enum level) {
-        spdlog::set_level(level);
-    }
 
     template <typename T>
     static void info(const std::string& TAG, const T& val);

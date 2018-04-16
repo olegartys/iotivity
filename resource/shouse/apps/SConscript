@@ -12,3 +12,6 @@ SConscript('#resource/shouse/apps/legacy/SConscript')
 SConscript('#resource/shouse/apps/rp2/bcm2835/SConscript')
 # RP2 HAL DLLS
 SConscript('#resource/shouse/apps/rp2/HAL/SConscript')
+
+# RP2 test
+SConscript('#resource/shouse/apps/rp2/test/SConsript')

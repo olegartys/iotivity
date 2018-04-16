@@ -20,7 +20,7 @@ public:
 public:
     virtual ~BaseResourceClient() = default;
 
-    void setOCResource(const std::shared_ptr<OC::OCResource>& resource) {
+    void setOCResource(std::shared_ptr<OC::OCResource> resource) {
         mOCResource = resource;
     }
 
@@ -46,6 +46,9 @@ public:
 protected:
     template <typename... Args>
     BaseResourceClient(Args&&... args) {
+        static_assert(std::is_base_of<BaseResource, ResourceType>::value,
+            "ResourceType template argument should be child of BaseResource");
+
         mResource.reset(new ResourceType(std::forward<Args>(args)...));
     }
 

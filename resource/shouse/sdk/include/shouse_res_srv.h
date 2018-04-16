@@ -32,7 +32,7 @@ public:
 protected:
 	virtual OCEntityHandlerResult entityHandler(std::shared_ptr<OC::OCResourceRequest> request) override;
 
-	virtual void sendResponse(const std::shared_ptr<OC::OCResourceResponse>& resp) const;
+	virtual void sendResponse(std::shared_ptr<OC::OCResourceResponse> resp) const;
 
 	inline const ShouseResourceServer* getSelfPtr() { return this; }
 

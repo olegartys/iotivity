@@ -262,7 +262,7 @@ bool ShouseResourceServer::handlePUT(const OCRepresentation& clientRepresentatio
 
 static int count = 0;
 
-void ShouseResourceServer::sendResponse(const std::shared_ptr<OCResourceResponse>& resp) const {
+void ShouseResourceServer::sendResponse(std::shared_ptr<OCResourceResponse> resp) const {
     Log::info(LOG_TAG, "{}: Sending response...", __FUNCTION__);
     if (type() == "camera") {
         Log::error(LOG_TAG, "{}: Sending response {}...", count++, __FUNCTION__);

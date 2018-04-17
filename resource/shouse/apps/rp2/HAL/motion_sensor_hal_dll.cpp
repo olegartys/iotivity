@@ -10,7 +10,7 @@
 
 #define UNUSED_PARAMETER(x) (void)(x)
 
-#define MOTION_PIN RPI_V2_GPIO_P1_11
+#define MOTION_PIN RPI_V2_GPIO_P1_13
 
 extern "C" {
     static constexpr const char* LOG_TAG = "MotionSensorHalDll";
@@ -20,7 +20,7 @@ extern "C" {
         if (!bcm2835_init()) {
             return -1;
         }
-
+	isInited = true;
         return 0;
     }
 
@@ -29,7 +29,7 @@ extern "C" {
         bcm2835_close();
         return ShouseHALResult::OK;
     }
-    
+
     ShouseHALResult HAL_get(int id, const std::string& propName, std::string& resultValue,
                                                                  const OC::QueryParamsMap& params) {
         if (!isInited) {
@@ -39,7 +39,7 @@ extern "C" {
 
         Log::info(LOG_TAG, "Get something: {}", propName); 
 
-        if (propName == "currState") {
+        if (propName == "state") {
             resultValue = std::to_string(bcm2835_gpio_lev(MOTION_PIN));
         } else {
             ret = ShouseHALResult::ERR;
@@ -74,7 +74,7 @@ extern "C" {
     std::vector<ResourceProperty> HAL_properties() {
         ResourceProperty prop;
 
-        prop.mName = "currState";
+        prop.mName = "state";
         prop.mType = ResourceProperty::Type::T_INT;
 
         prop.mValue = isInited ? bcm2835_gpio_lev(MOTION_PIN) : LOW;

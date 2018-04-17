@@ -28,6 +28,8 @@ hal_test_env.AppendUnique(LIBS = ['ocsrm'])
 
 #hal_test_env.AppendUnique(LIBS = ['RamlParser'])
 
+hal_test_env.AppendUnique(LIBS = ['bcm2835'])
+
 hal_test_env.AppendUnique(LIBS = ['shouse_core'])
 hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
 

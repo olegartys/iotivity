@@ -201,15 +201,19 @@ int main(int argc, char** argv) {
 
     /* This set of setProp calls is in race condition with observation thread.
      */
-    lightResource->setProp("newState", "1");
+    int value = 1;
+    while (1) {
+	std::string strValue = std::to_string(value);
+        lightResource->setProp("state", strValue);
 
-    lightResource->put(onPut);
+        lightResource->put(onPut);
 
-    lightResource->get(onGet);
+        lightResource->get(onGet);
 
-    sleep(5);
-
-    lightResource->stopObserve();
+	value = value ? 0 : 1;
+        sleep(1);
+    }
+//    lightResource->stopObserve();
 
 
     return 0;

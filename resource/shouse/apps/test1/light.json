@@ -1,0 +1,8 @@
+{
+	"name": "room_light1",
+	"uri": "/main_room/light1",
+	"type": "light",
+	"iface": "lightable",
+	"hal" : "/home/pi/shouse/iotivity/resource/shouse/apps/test1/libHAL_RP2_rfid.so",
+	"async": false
+}

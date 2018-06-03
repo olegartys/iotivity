@@ -15,3 +15,6 @@ SConscript('#resource/shouse/apps/rp2/HAL/SConscript')
 
 # RP2 test
 SConscript('#resource/shouse/apps/rp2/test/SConsript')
+
+# test1
+SConscript('#resource/shouse/apps/test1/SConscript')

@@ -8,15 +8,13 @@
 #include <atomic>
 #include <functional>
 
-#include <unistd.h> //usleep
-
 #define UNUSED_PARAMETER(x) (void)(x)
 
-#define LED_PIN RPI_V2_GPIO_P1_11
+#define MOTION_PIN RPI_V2_GPIO_P1_32
 
 extern "C" {
-    static constexpr const char* LOG_TAG = "DiodHalDll";
-    static volatile bool isInited = false;
+    static constexpr const char* LOG_TAG = "MotionSensorHalDll";
+    static bool isInited = false;
 
     int HAL_open() {
         if (!bcm2835_init()) {
@@ -27,7 +25,7 @@ extern "C" {
     }
 
     ShouseHALResult HAL_close(int id) {
-        UNUSED_PARAMETER(id);
+        (void)id;
         bcm2835_close();
         return ShouseHALResult::OK;
     }
@@ -39,10 +37,10 @@ extern "C" {
         }
         ShouseHALResult ret = ShouseHALResult::OK;
 
-        Log::info(LOG_TAG, "Get something: {}", propName);
+        Log::info(LOG_TAG, "Get something: {}", propName); 
 
         if (propName == "state") {
-            resultValue = std::to_string(bcm2835_gpio_lev(LED_PIN));
+            resultValue = std::to_string(bcm2835_gpio_lev(MOTION_PIN));
         } else {
             ret = ShouseHALResult::ERR;
         }
@@ -52,45 +50,25 @@ extern "C" {
 
     ShouseHALResult HAL_put(int id, const std::string& propName, const std::string& newValue,
                                                                  const OC::QueryParamsMap& params) {
-        if (!isInited) {
-            return ShouseHALResult::ERR;
-        }
-        ShouseHALResult ret = ShouseHALResult::OK;
-
-        Log::info(LOG_TAG, "Put something: {}, {}", propName, newValue);
-        if (propName == "state") {
-            int val = std::stoi(newValue);
-            if (val < 0 && val > 1) {
-                ret = ShouseHALResult::ERR;
-            } else {
-                bcm2835_gpio_write(LED_PIN, val);
-            }
-        } else {
-            ret = ShouseHALResult::ERR;
-        }
-
-        return ret;
+        return ShouseHALResult::OK;
     }
 
     void HAL_observe(int id, const OC::QueryParamsMap& params,
         std::atomic_bool& isThreadRunning,
         std::function<void(int)> notifyChanges) {
-	if (!isInited) return;
         UNUSED_PARAMETER(id);
-        UNUSED_PARAMETER(params);
-        UNUSED_PARAMETER(isThreadRunning);
-        UNUSED_PARAMETER(notifyChanges);
-	int lastValue = bcm2835_gpio_lev(LED_PIN);
-	int value = lastValue;
+
+        int lastState = bcm2835_gpio_lev(MOTION_PIN);
+        int state = lastState;
+
         while(isThreadRunning) {
-		value = bcm2835_gpio_lev(LED_PIN);
-		if (value != lastValue) {
-			notifyChanges(value);
-			lastValue = value;
-		}
-		usleep(250);
-	}
-	return;
+            state = bcm2835_gpio_lev(MOTION_PIN);
+            if (state != lastState) {
+                notifyChanges(state);
+                lastState = state;
+            }
+        }
+        return;
     }
 
     std::vector<ResourceProperty> HAL_properties() {
@@ -98,9 +76,10 @@ extern "C" {
 
         prop.mName = "state";
         prop.mType = ResourceProperty::Type::T_INT;
-        prop.mValue = isInited ? bcm2835_gpio_lev(LED_PIN) : LOW;
 
-        std::vector<ResourceProperty> vec {prop};
+        prop.mValue = isInited ? bcm2835_gpio_lev(MOTION_PIN) : LOW;
+
+        std::vector<ResourceProperty> vec{prop};
 
         return vec;
     }

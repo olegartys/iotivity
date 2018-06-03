@@ -1,0 +1,38 @@
+Import('shouse_env')
+
+hal_test_env = shouse_env.Clone()
+
+hal_test_env.AppendUnique(CPPPATH = [
+		'#/extlibs/cjson',
+	    '#/resource/include',
+	    '#/resource/c_common',
+        '#/resource/csdk/security/include',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+        '#/resource/shouse/sdk/include',
+        '#/resource/shouse/sdk/'
+        ])
+
+# IoTivity libs
+hal_test_env.AppendUnique(RPATH = [hal_test_env.get('BUILD_DIR')])
+hal_test_env.PrependUnique(LIBS = ['coap'])
+
+hal_test_env.AppendUnique(LIBS = ['octbstack'])
+hal_test_env.AppendUnique(LIBS = ['oc'])
+
+hal_test_env.AppendUnique(LIBS = ['ocsrm'])
+
+hal_test_env.AppendUnique(LIBS = ['bcm2835'])
+
+hal_test_env.AppendUnique(LIBS = ['shouse_core'])
+hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
+
+hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
+
+# DLL Diod HAL module
+hal_test_env.SharedLibrary('HAL_RP2_numpad', ['numpad_hal_dll.cpp'])
+
+hal_test_env.AppendTarget('hal_test')

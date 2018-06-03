@@ -1,48 +1,18 @@
 Import('shouse_env')
 
-hal_test_env = shouse_env.Clone()
+SConscript('#resource/shouse/apps/raml_test/SConscript')
+SConscript('#resource/shouse/apps/hal_test/SConscript')
 
-hal_test_env.AppendUnique(CPPPATH = [
-		'#/extlibs/cjson',
-	    '#/resource/include',
-	    '#/resource/c_common',
-        '#/resource/csdk/security/include',
-        '#/resource/csdk/include',
-        '#/resource/csdk/stack/include',
-        '#/resource/c_common/ocrandom/include',
-        '#/resource/csdk/logger/include',
-        '#/resource/oc_logger/include',
-        '#/resource/shouse/sdk/include',
-        '#/resource/shouse/sdk/',
-	'#/resource/shouse/apps/rp2/bcm2835/src'
-        ])
+SConscript('#resource/shouse/apps/smart_home/SConscript')
 
-# IoTivity libs
-hal_test_env.AppendUnique(RPATH = [hal_test_env.get('BUILD_DIR')])
-hal_test_env.PrependUnique(LIBS = ['coap'])
+# Legacy apps
+SConscript('#resource/shouse/apps/legacy/SConscript')
 
-hal_test_env.AppendUnique(LIBS = ['octbstack'])
-hal_test_env.AppendUnique(LIBS = ['oc'])
+# RP2 HAL DLLS
+SConscript('#resource/shouse/apps/rp2/HAL/numpad_hal/SConscript')
+SConscript('#resource/shouse/apps/rp2/HAL/diod_hal/SConscript')
+SConscript('#resource/shouse/apps/rp2/HAL/motion_hal/SConscript')
+SConscript('#resource/shouse/apps/rp2/HAL/temperature_ds18b20/SConscript')
+SConscript('#resource/shouse/apps/rp2/HAL/pressure_bmp180/SConscript')
+SConscript('#resource/shouse/apps/rp2/HAL/rfid_hal/SConscript')
 
-hal_test_env.AppendUnique(LIBS = ['ocsrm'])
-
-#hal_test_env.AppendUnique(LIBS = ['RamlParser'])
-
-hal_test_env.AppendUnique(LIBS = ['bcm2835'])
-
-hal_test_env.AppendUnique(LIBS = ['shouse_core'])
-hal_test_env.AppendUnique(LIBS = ['shouse_utils'])
-
-hal_test_env.AppendUnique(CXXFLAGS = ['-g'])
-
-# HAL-based interface
-#hal_test_env.Program('HAL_test_server', ['test_server.cpp'])
-#hal_test_env.Program('HAL_test_client', ['test_client.cpp'])
-
-# DLL Diod HAL module
-hal_test_env.SharedLibrary('HAL_RP2_diod', ['diod_hal_dll.cpp'])
-
-# DLL Motion Sensor HAL module
-hal_test_env.SharedLibrary('HAL_RP2_motion', ['motion_sensor_hal_dll.cpp'])
-
-hal_test_env.AppendTarget('hal_test')
